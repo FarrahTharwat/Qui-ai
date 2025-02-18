@@ -1,0 +1,19 @@
+# Django
+*.sqlite3
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+
+# Node.js
+node_modules/
+build/
+
+# Python Virtual Env
+venv/
+*.log
+
+# ML Models
+*.h5
+*.pkl
