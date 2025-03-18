@@ -18,7 +18,7 @@ from django.contrib.auth.views import LogoutView
 app_name = 'base' 
 
 urlpatterns = [ 
-     path('', home_view, name='home'),
+    path('', home_view, name='home'),
     path("accounts/signup/", authView, name="authView"),  # Changed from "signup/" to "accounts/signup/"
     # path('signup/', authView, name='signup'),
     path("accounts/", include("django.contrib.auth.urls")),
