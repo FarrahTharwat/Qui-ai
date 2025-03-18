@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Sign Up</h1>
+<form method="POST" class="form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Sign Up</button>
+</form>
+
+<p>Already have an account? <a href="{% url 'base:login' %}">Login</a></p>
+
+<p>Back to <a href="{% url 'base:home' %}">Home Page</a></p>
+
+{% endblock content %}
+
+
+
+{% comment %} 
+
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Sign Up</h2>
+    {% if form.errors %}
+        <div style="color: red;">
+            <strong>Please fix the following errors:</strong>
+            <ul>
+                {% for field, errors in form.errors.items %}
+                    <li>{{ field }}: {{ errors.0 }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+    
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Submit</button>
+    </form>
+{% endblock %} {% endcomment %}
