@@ -6,6 +6,7 @@ from fastapi import FastAPI, APIRouter, HTTPException, Depends
 from database import redis_client, LEADERBOARD_PREFIX, TRACKING_SERVICE_URL, async_session_maker, get_db, sync_redis_with_postgresql
 from models import Leaderboard, LeaderboardEntry
 from typing import List
+from worker import update_leaderboard, process_updates
 
 # FastAPI app
 app = FastAPI()
@@ -18,6 +19,7 @@ def read_root():
 @router.on_event("startup")
 async def start_sync_task():
     asyncio.create_task(sync_redis_with_postgresql())
+    asyncio.create_task(process_updates())
 
 
 @router.post("/submit_score/")
@@ -64,35 +66,24 @@ async def get_top_players(course_id: str, count: int, db: AsyncSession = Depends
         raise HTTPException(status_code=404, detail="No players found for this course.")
     return [{"rank": idx + 1, "username": player.username, "score": player.score} for idx, player in enumerate(top_players)]
 
+
 @router.post("/fetch_and_update_leaderboard/")
 async def fetch_and_update_leaderboard():
+    """
+    Fetch latest scores and trigger leaderboard update via Celery.
+    """
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(TRACKING_SERVICE_URL)
             response.raise_for_status()
             scores = response.json()
-            return await update_leaderboard(scores)  # Ensure function call
+
+        # Call Celery task asynchronously
+        task = update_leaderboard.delay(scores)
+        return {"message": "Leaderboard update in progress", "task_id": task.id}
+
     except httpx.HTTPError as e:
         raise HTTPException(status_code=500, detail=f"Error fetching scores: {str(e)}")
-
-
-async def update_leaderboard(scores):
-    async with async_session_maker() as db:
-        for score_entry in scores:
-            username = score_entry["username"]
-            course_id = score_entry["course_id"]
-            score = score_entry["score"]
-            result = await db.execute(select(Leaderboard).where(
-                (Leaderboard.course_id == course_id) & (Leaderboard.username == username)
-            ))
-            existing_entry = result.scalars().first()
-            if existing_entry:
-                existing_entry.score = max(existing_entry.score, score)
-            else:
-                db.add(Leaderboard(course_id=course_id, username=username, score=score))
-        await db.commit()
-    return {"message": "Leaderboard updated successfully."}
-
 @router.delete("/reset/{course_id}")
 async def reset_leaderboard(course_id: str):
     leaderboard_key = f"{LEADERBOARD_PREFIX}{course_id}"

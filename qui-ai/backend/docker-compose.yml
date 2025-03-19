@@ -1,17 +1,33 @@
-version: "3.8"
+version: '3.8'
 
 services:
   fastapi-app:
     build: .
+    container_name: backend-fastapi-app
     ports:
       - "8000:8000"
     depends_on:
-      - redis
       - postgres
+      - redis
     environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - DATABASE_URL=postgresql+asyncpg://adminuser:yourpassword@postgres:5432/postgres
+      - DATABASE_URL=postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:5432/$POSTGRES_DB
+    volumes:
+      - .:/apps
+    env_file:
+      - .env
+
+  backend-worker:
+    build: .
+    container_name: backend-worker
+    depends_on:
+      - redis
+      - fastapi-app
+    environment:
+      - PYTHONPATH=/apps
+    command: [ "celery", "-A", "apps.leaderboard.worker", "worker", "--loglevel=info" ]
+
+    volumes:
+      - .:/apps
     env_file:
       - .env
 
@@ -20,30 +36,24 @@ services:
     container_name: redis
     ports:
       - "6379:6379"
-    command: redis-server --save 60 1 --loglevel warning
+    environment:
+      - REDIS_PASSWORD=
+    restart: always
 
   postgres:
     image: postgres:latest
     container_name: postgres
-    restart: always
-    environment:
-      - POSTGRES_USER=adminuser
-      - POSTGRES_PASSWORD=yourpassword
-      - POSTGRES_DB=postgres
     ports:
       - "5432:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-  worker:
-    build: .
-    command: ["python", "worker.py"]
-    depends_on:
-      - redis
-      - fastapi-app
-    environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+    restart: always
+    env_file:
+      - .env
 
 volumes:
   postgres_data:

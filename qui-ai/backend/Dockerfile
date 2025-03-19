@@ -1,18 +1,17 @@
-# Use official Python image as base
+# Start from a Python base image
 FROM python:3.10
 
 # Set the working directory inside the container
-WORKDIR /app
+WORKDIR /apps
 
-# Copy requirements.txt and install dependencies
-COPY requirements.txt .
+# Copy all project files into the container
+COPY . /apps
+
+# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application code into the container
-COPY . .
+# Set environment variables
+ENV PYTHONPATH=/apps
 
-# Expose the port the app runs on
-EXPOSE 8000
-
-# Command to run FastAPI with Uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start Celery worker
+CMD ["celery", "-A", "apps.leaderboard.worker", "worker", "--loglevel=info"]

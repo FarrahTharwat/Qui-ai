@@ -6,21 +6,25 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.future import select
 from dotenv import load_dotenv
-from models import Leaderboard
-from models import Base  # Import Base model
+from .models import Leaderboard, Base
 
 # Load environment variables
 load_dotenv()
 
 # Secure Redis connection
 REDIS_HOST = os.getenv("REDIS_HOST")
-REDIS_PORT = int(os.getenv("REDIS_PORT", 6380))
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 
-if not REDIS_PASSWORD:
-    raise ValueError("Redis password is missing. Set REDIS_PASSWORD as an environment variable.")
+if REDIS_PASSWORD is None:  # Allow empty password instead of raising an error
+    REDIS_PASSWORD = ""
 
-redis_client = Redis(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD, ssl=True)
+
+redis_client = Redis(
+    host=REDIS_HOST,
+    port=REDIS_PORT,
+    password=REDIS_PASSWORD if REDIS_PASSWORD else None  # Use None if no password is needed
+)
 
 LEADERBOARD_PREFIX = "course_leaderboard:"
 TRACKING_SERVICE_URL = os.getenv("TRACKING_SERVICE_URL")
@@ -30,8 +34,9 @@ command = "az account get-access-token --resource https://ossrdbms-aad.database.
 PGPASSWORD = subprocess.getoutput(command).strip()
 
 DATABASE_URL = (
-    f"postgresql+asyncpg://{os.getenv('PGUSER')}:{PGPASSWORD}@{os.getenv('PGHOST')}:{os.getenv('PGPORT')}/{os.getenv('PGDATABASE')}"
+    f"postgresql+asyncpg://{os.getenv('PGUSER')}:{PGPASSWORD}@{os.getenv('PGHOST')}:{os.getenv('PGPORT')}/{os.getenv('PGDATABASE')}?sslmode=require"
 )
+
 
 engine = create_async_engine(DATABASE_URL, echo=True)
 async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
