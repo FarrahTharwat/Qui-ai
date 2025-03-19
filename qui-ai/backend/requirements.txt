@@ -3,3 +3,5 @@ uvicorn
 redis
 httpx
 python-dotenv  # If you're using .env files for environment variables
+asyncpg
+sqlalchemy

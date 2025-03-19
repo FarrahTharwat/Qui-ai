@@ -60,6 +60,12 @@ async def sync_redis_with_postgresql():
 app = FastAPI()
 router = APIRouter()
 
+
+
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the API"}
+
 @router.on_event("startup")
 async def start_sync_task():
     asyncio.create_task(sync_redis_with_postgresql())
@@ -126,6 +132,23 @@ async def fetch_and_update_leaderboard():
     except httpx.HTTPError as e:
         raise HTTPException(status_code=500, detail=f"Error fetching scores: {str(e)}")
 
+async def update_leaderboard(scores):
+    async with async_session_maker() as db:
+        for score_entry in scores:
+            username = score_entry["username"]
+            course_id = score_entry["course_id"]
+            score = score_entry["score"]
+            result = await db.execute(select(Leaderboard).where(
+                (Leaderboard.course_id == course_id) & (Leaderboard.username == username)
+            ))
+            existing_entry = result.scalars().first()
+            if existing_entry:
+                existing_entry.score = max(existing_entry.score, score)
+            else:
+                db.add(Leaderboard(course_id=course_id, username=username, score=score))
+        await db.commit()
+    return {"message": "Leaderboard updated successfully."}
+
 @router.delete("/reset/{course_id}")
 async def reset_leaderboard(course_id: str):
     leaderboard_key = f"{LEADERBOARD_PREFIX}{course_id}"
@@ -135,3 +158,4 @@ async def reset_leaderboard(course_id: str):
     return {"message": f"Leaderboard for course {course_id} reset!"}
 
 app.include_router(router)
+

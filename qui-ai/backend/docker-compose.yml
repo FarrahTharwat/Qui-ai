@@ -7,9 +7,13 @@ services:
       - "8000:8000"
     depends_on:
       - redis
+      - postgres
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - DATABASE_URL=postgresql+asyncpg://adminuser:yourpassword@postgres:5432/postgres
+    env_file:
+      - .env
 
   redis:
     image: redis:latest
@@ -17,3 +21,29 @@ services:
     ports:
       - "6379:6379"
     command: redis-server --save 60 1 --loglevel warning
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=adminuser
+      - POSTGRES_PASSWORD=yourpassword
+      - POSTGRES_DB=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  worker:
+    build: .
+    command: ["python", "worker.py"]
+    depends_on:
+      - redis
+      - fastapi-app
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+volumes:
+  postgres_data:
