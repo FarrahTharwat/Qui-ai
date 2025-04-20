@@ -1,15 +1,16 @@
-[project]
-name = "poetry add sqlalchemy alembic asyncpg"
+[tool.poetry]
+name = "leaderboard"
 version = "0.1.0"
-description = "poetry add sqlalchemy alembic asyncpg"
-authors = [
-    {name = "Farrah Tharwat",email = "105726046+FarrahTharwat@users.noreply.github.com"}
-]
-readme = "README.md"
-requires-python = ">=3.8"
-dependencies = [
-]
+description = "Qui.ai leaderboard service"
+authors = ["Farrah Tharwat <105726046+FarrahTharwat@users.noreply.github.com>"]
 
+[tool.poetry.dependencies]
+python = ">=3.9"
+fastapi = "^0.110.0"
+uvicorn = "^0.34.0"
+sqlalchemy = "^2.0.27"
+asyncpg = "^0.29.0"
+alembic = "^1.12.1"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

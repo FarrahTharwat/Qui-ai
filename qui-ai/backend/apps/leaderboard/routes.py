@@ -3,10 +3,10 @@ import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from fastapi import FastAPI, APIRouter, HTTPException, Depends
-from database import redis_client, LEADERBOARD_PREFIX, TRACKING_SERVICE_URL, async_session_maker, get_db, sync_redis_with_postgresql
+from database import (redis_client, LEADERBOARD_PREFIX, TRACKING_SERVICE_URL, get_db, sync_redis_with_postgresql)
 from models import Leaderboard, LeaderboardEntry
 from typing import List
-from worker import update_leaderboard, process_updates
+from worker import update_leaderboard
 
 # FastAPI app
 app = FastAPI()
@@ -18,8 +18,7 @@ def read_root():
 
 @router.on_event("startup")
 async def start_sync_task():
-    asyncio.create_task(sync_redis_with_postgresql())
-    asyncio.create_task(process_updates())
+    asyncio.create_task(sync_redis_with_postgresql())  # Remove process_updates() call
 
 
 @router.post("/submit_score/")

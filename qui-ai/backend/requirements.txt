@@ -1,9 +1,8 @@
 fastapi
-uvicorn
+uvicorn[standard]
 redis
 httpx
 python-dotenv
 asyncpg
-sqlalchemy
-celery
-
+sqlalchemy[asyncio]
+celery[redis]

@@ -1,64 +1,70 @@
 import os
 import asyncio
 import subprocess
-from redis import Redis
+import redis
+import warnings
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.future import select
 from dotenv import load_dotenv
-from .models import Leaderboard, Base
+from models import Leaderboard
 
-# Load environment variables
+warnings.filterwarnings("ignore", message="ssl_cert_reqs is set to CERT_NONE")
+
 load_dotenv()
 
-# Secure Redis connection
-REDIS_HOST = os.getenv("REDIS_HOST")
-REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
-REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
-
-if REDIS_PASSWORD is None:  # Allow empty password instead of raising an error
-    REDIS_PASSWORD = ""
-
-
-redis_client = Redis(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
-    password=REDIS_PASSWORD if REDIS_PASSWORD else None  # Use None if no password is needed
-)
-
+# Constants
 LEADERBOARD_PREFIX = "course_leaderboard:"
 TRACKING_SERVICE_URL = os.getenv("TRACKING_SERVICE_URL")
 
-# Secure PostgreSQL connection
-command = "az account get-access-token --resource https://ossrdbms-aad.database.windows.net --query accessToken --output tsv"
-PGPASSWORD = subprocess.getoutput(command).strip()
-
-DATABASE_URL = (
-    f"postgresql+asyncpg://{os.getenv('PGUSER')}:{PGPASSWORD}@{os.getenv('PGHOST')}:{os.getenv('PGPORT')}/{os.getenv('PGDATABASE')}?sslmode=require"
+# Redis Configuration
+redis_client = redis.Redis(
+    host=os.getenv("REDIS_HOST"),
+    port=int(os.getenv("REDIS_PORT", 6380)),
+    password=os.getenv("REDIS_PASSWORD"),
+    ssl=True,
+    ssl_cert_reqs=None,
+    decode_responses=True
 )
 
+# PostgreSQL Initialization
+async def get_azure_token():
+    try:
+        result = subprocess.run(
+            ["az", "account", "get-access-token", "--resource",
+             "https://ossrdbms-aad.database.windows.net", "--query", "accessToken", "-o", "tsv"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"Azure CLI error: {e.stderr}") from e
 
-engine = create_async_engine(DATABASE_URL, echo=True)
-async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+engine = None
+async_session_maker = None
+
+async def initialize_db():
+    global engine, async_session_maker
+    access_token = await get_azure_token()
+    DATABASE_URL = f"postgresql+asyncpg://{os.getenv('POSTGRES_USER')}:{access_token}@{os.getenv('POSTGRES_HOST')}:5432/{os.getenv('POSTGRES_DB')}?sslmode=require"
+    engine = create_async_engine(DATABASE_URL, echo=True)
+    async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 async def get_db():
+    if not async_session_maker:
+        await initialize_db()
     async with async_session_maker() as session:
         yield session
 
-# Background Task to Sync Redis with PostgreSQL
 async def sync_redis_with_postgresql():
     while True:
-        async with async_session_maker() as db:
-            result = await db.execute(select(Leaderboard))
-            entries = result.scalars().all()
-            with redis_client.pipeline() as pipe:
-                for entry in entries:
-                    leaderboard_key = f"{LEADERBOARD_PREFIX}{entry.course_id}"
-                    pipe.zadd(leaderboard_key, {entry.username: entry.score})
-                pipe.execute()
-        await asyncio.sleep(300)  # Sync every 5 minutes
-
-
-async def init_db():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)  # Ensures tables are created
+        try:
+            async with async_session_maker() as db:
+                result = await db.execute(select(Leaderboard))
+                for entry in result.scalars():
+                    redis_client.zadd(f"{LEADERBOARD_PREFIX}{entry.course_id}", {entry.username: entry.score})
+            await asyncio.sleep(300)
+        except Exception as e:
+            print(f"Sync error: {e}")
+            await asyncio.sleep(60)
