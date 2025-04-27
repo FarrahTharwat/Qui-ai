@@ -1,7 +1,14 @@
-# main.py
 from fastapi import FastAPI
-from app.routes import router as app_router  # Assuming we'll set up routes in 'app/routes.py'
+from app.utils.db import SessionLocal, Base, engine, get_db
+from model.flashcard import Flashcard
 
 app = FastAPI()
+app.include_router(Flashcard.router, prefix="/api")
 
-app.include_router(app_router)
+@app.get("/")
+async def root():
+    return {"message": "Welcome to ContentHandler API!"}
+
+@app.on_event("startup")
+def on_startup():
+    Base.metadata.create_all(bind=engine)

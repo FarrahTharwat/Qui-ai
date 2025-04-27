@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+httpx
+aiofiles
+pydantic
+sqlalchemy
+psycopg2-binary
+python-dotenv
+azure-ai-textanalytics
+pytest
+httpx
+alembic
+azure-identity==1.14.0
