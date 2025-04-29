@@ -31,6 +31,9 @@ async def root():
     logging.info("Root endpoint called")
     return {"status": "API Online!"}
 
+@app.get("/")
+def read_root():
+    return {"message": "ContentHandler FastAPI is running!"}
 
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():

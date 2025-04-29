@@ -2,6 +2,8 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+EXPOSE 8000
+
 # Install system dependencies (if needed)
 RUN apt-get update && apt-get install -y libpq-dev gcc
 
@@ -14,4 +16,4 @@ ENV ENVIRONMENT="development"
 ENV DB_USERNAME="farrahtharwat"
 ENV DB_PASSWORD="farrahpost"
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
