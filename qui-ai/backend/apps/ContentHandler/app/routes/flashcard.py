@@ -1,8 +1,7 @@
-# app/routes/flashcard.py
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from ContentHandler.model.flashcard import Flashcard  # Absolute import
-from app.utils.db import get_db  # From subdirectory
+from model.flashcard import Flashcard  # Absolute import
+from app.utils.db import get_db  # Absolute import
 
 router = APIRouter()
 

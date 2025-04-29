@@ -1,0 +1,10 @@
+# docker-compose.yml
+version: '3'
+services:
+  app:
+    image: my-app:latest
+    environment:
+      - DB_PASSWORD=farrahpost
+      - DB_USERNAME=postgres
+    ports:
+      - "80:80"
