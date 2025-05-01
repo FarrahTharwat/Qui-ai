@@ -5,7 +5,7 @@ import os
 from app.utils.pdf_handler import extract_text_from_pdf
 from app.utils.azure_cleaner import clean_text_azure  # Import Azure cleaning function
 
-router = APIRouter()
+router = APIRouter(tags=["Upload"])
 
 UPLOAD_DIR = './uploads/'
 os.makedirs(UPLOAD_DIR, exist_ok=True)
