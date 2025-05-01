@@ -60,3 +60,7 @@ azure-ai-textanalytics
 pytest
 httpx
 alembic
+
+docker-compose down && docker-compose up --build
+
+now locally the fastapi is not working but remotely yes, i would love things to be remote but idk if its a better idea to have things local for now till its time to deploy, can you please tell me your thoughts?
