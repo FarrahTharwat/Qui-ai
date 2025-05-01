@@ -18,3 +18,5 @@ openai>=1.12.0
 fpdf
 tiktoken
 tenacity
+reportlab>=4.0.0
+python-docx>=0.8.11
