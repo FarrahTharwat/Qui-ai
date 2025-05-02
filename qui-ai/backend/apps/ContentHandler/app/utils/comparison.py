@@ -1,49 +1,47 @@
+import os
 from difflib import HtmlDiff
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
 from app.utils.storage import load_raw_text, load_cleaned_text
+from app.utils.pdf_writer import create_comparison_pdf  # assumes you have a helper like this
+
+COMPARISON_HTML_DIR = "data/diffs"
+COMPARISON_PDF_DIR = "data/comparisons"
+
+os.makedirs(COMPARISON_HTML_DIR, exist_ok=True)
+os.makedirs(COMPARISON_PDF_DIR, exist_ok=True)
 
 
 def generate_diff_html(file_id: str) -> str:
-    """Generate HTML diff between raw and cleaned text"""
-    raw = load_raw_text(file_id) or ""
-    cleaned = load_cleaned_text(file_id) or ""
+    raw_text = load_raw_text(file_id)
+    cleaned_text = load_cleaned_text(file_id)
+
+    if not raw_text or not cleaned_text:
+        raise ValueError("Missing raw or cleaned text")
 
     differ = HtmlDiff()
-    return differ.make_file(
-        raw.splitlines(),
-        cleaned.splitlines(),
-        context=True,
-        numlines=3,
-        title=f"Text Comparison - {file_id}"
+    html_diff = differ.make_file(
+        raw_text.splitlines(),
+        cleaned_text.splitlines(),
+        fromdesc="Original Text",
+        todesc="Cleaned Text"
     )
 
+    output_path = os.path.join(COMPARISON_HTML_DIR, f"{file_id}_diff.html")
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write(html_diff)
 
-def generate_comparison_pdf(file_id: str, output_path: str = None) -> str:
-    """Generate side-by-side PDF comparison"""
-    raw = load_raw_text(file_id) or ""
-    cleaned = load_cleaned_text(file_id) or ""
-
-    if not output_path:
-        output_path = f"data/comparisons/{file_id}_comparison.pdf"
-
-    doc = SimpleDocTemplate(output_path, pagesize=letter)
-    styles = getSampleStyleSheet()
-    story = []
-
-    # Title
-    story.append(Paragraph(f"Text Cleaning Comparison: {file_id}", styles['Title']))
-    story.append(Spacer(1, 24))
-
-    # Original Section
-    story.append(Paragraph("<b>Original Text</b>", styles['Heading2']))
-    story.append(Paragraph(raw.replace("\n", "<br/>"), styles['Normal']))
-    story.append(Spacer(1, 24))
-
-    # Cleaned Section
-    story.append(Paragraph("<b>Cleaned Text</b>", styles['Heading2']))
-    story.append(Paragraph(cleaned.replace("\n", "<br/>"), styles['Normal']))
-
-    doc.build(story)
     return output_path
+
+
+def generate_comparison_pdf(file_id: str) -> str:
+    raw_text = load_raw_text(file_id)
+    cleaned_text = load_cleaned_text(file_id)
+
+    if not raw_text or not cleaned_text:
+        raise ValueError("Missing raw or cleaned text")
+
+    output_pdf_path = os.path.join(COMPARISON_PDF_DIR, f"{file_id}_comparison.pdf")
+
+    # You’ll need this helper to create a simple side-by-side PDF.
+    create_comparison_pdf(raw_text, cleaned_text, output_pdf_path)
+
+    return output_pdf_path
