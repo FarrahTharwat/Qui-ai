@@ -5,8 +5,7 @@ import tiktoken
 from typing import List, Tuple
 from dotenv import load_dotenv
 from tenacity import retry, stop_after_attempt, wait_exponential
-from openai import AzureOpenAI
-
+from openai import AzureOpenAI # your Azure client
 load_dotenv()
 
 client = AzureOpenAI(
@@ -96,3 +95,45 @@ def ai_clean_text(raw_text: str) -> str:
     final_text = re.sub(r'(?<!\n)\n(?!\n)', ' ', final_text)
 
     return final_text
+
+def refine_cleaned_text(text: str) -> str:
+    """Improves the cleaned text by running another pass in safe chunks."""
+    chunks = intelligent_chunking(text, max_tokens=1800)
+    refined_chunks = []
+
+    print(f"🔁 Refining {len(chunks)} chunks...")
+
+    for idx, (start, end, chunk) in enumerate(chunks):
+        print(f"✨ Refining chunk {idx+1}/{len(chunks)}")
+
+        try:
+            response = client.chat.completions.create(
+                model=os.getenv("AZURE_DEPLOYMENT"),
+                messages=[
+                    {"role": "system", "content": "You're a precise book refiner."},
+                    {"role": "user", "content": f"""
+Clean and refine the following text. 
+Rules:
+- Do NOT paraphrase.
+- Fix spacing, remove remaining noise.
+- Make sure the result reads like clear paragraphs.
+
+TEXT (chunk {idx+1}/{len(chunks)}):
+\"\"\"{chunk}\"\"\"
+"""}
+                ],
+                temperature=0.2,
+                max_tokens=1800,
+            )
+
+            refined = response.choices[0].message.content.strip()
+            refined_chunks.append(refined)
+
+        except Exception as e:
+            print(f"❌ Failed chunk {idx+1}: {e}")
+            refined_chunks.append(chunk)
+
+        time.sleep(1.5)
+
+    final_refined = "\n\n".join(refined_chunks)
+    return final_refined
