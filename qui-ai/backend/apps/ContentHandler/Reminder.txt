@@ -1,66 +1,7 @@
-Great question! If by **`view/`** you mean something like a user interface or admin panel, here’s how to think about it:
 
----
-
-## 🎛️ Do You Need a `view/` Folder?
-
-### ✅ Yes — *if* you're building:
-- A **simple frontend** (HTML templates or static files served via FastAPI),
-- An **admin dashboard** (for managing content, uploads, results, etc.).
-
-Then you can add a folder like:
-
-```
-content_handler/
-├── view/
-│   ├── templates/
-│   │   └── dashboard.html
-│   └── static/
-│       └── styles.css
-```
-
-You would also need to use **`Jinja2`** templates with FastAPI:
-
-```python
-from fastapi import FastAPI, Request
-from fastapi.templating import Jinja2Templates
-
-app = FastAPI()
-templates = Jinja2Templates(directory="view/templates")
-
-@app.get("/admin")
-def admin_dashboard(request: Request):
-    return templates.TemplateResponse("dashboard.html", {"request": request})
-```
-
----
-
-### ❌ No — if you're building a **pure backend API** (with routes consumed by a frontend elsewhere or just APIs for now), then you don’t need a `view/` folder.
-
-You can keep the backend focused on:
-- uploading
-- cleaning
-- summarizing
-- generating flashcards
-
-and eventually integrate it with a separate frontend project or dashboard microservice.
-
----
-
-Do you plan to show results inside ContentHandler, or will that be handled in a frontend later (like React or a mobile app)?
-ls -la requirements.txtfastapi
-uvicorn[standard]
-httpx
-aiofiles
-pydantic
-sqlalchemy
-psycopg2-binary
-python-dotenv
-azure-ai-textanalytics
-pytest
-httpx
-alembic
 
 docker-compose down && docker-compose up --build
+uvicorn main:app --reload
+
 
 now locally the fastapi is not working but remotely yes, i would love things to be remote but idk if its a better idea to have things local for now till its time to deploy, can you please tell me your thoughts?

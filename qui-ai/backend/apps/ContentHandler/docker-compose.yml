@@ -4,21 +4,26 @@ services:
   app:
     build:
       context: .
-    container_name: contenthandler-app
-    env_file:
-      - .env.dev
+      args:
+        - PYTHONUNBUFFERED=1
+    environment:
+      - HF_HOME=/app/models
+      - PGSSLMODE=require
+      - DATABASE_URL=postgresql://postgres:farrahpost@postgres/contenthandlerdb
     ports:
       - "8000:8000"
+    mem_limit: 4g
+    shm_size: 256mb
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
     volumes:
-      - .:/app
+      - model_cache:/app/models
+      - ./static/uploads:/app/static/uploads
+      - ./data:/app/data
 
   postgres:
     image: postgres:15
-    container_name: contenthandler-db
-    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: farrahpost
@@ -27,22 +32,12 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-  redis:
-    image: redis:7
-    container_name: contenthandler-redis
-    command:
-      - redis-server
-      - --requirepass ${REDIS_PASSWORD}
-      - --rename-command FLUSHDB ""
-      - --rename-command FLUSHALL ""
-    environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d contenthandlerdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
 volumes:
   postgres_data:
-  redis_data:
+  model_cache:

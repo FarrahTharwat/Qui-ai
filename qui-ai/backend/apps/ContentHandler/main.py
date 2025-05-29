@@ -7,8 +7,6 @@ from app.config import get_settings
 import logging
 from app.routes.health import router as health_router
 from app.routes.upload import router as upload_router
-from app.routes.cleaner import router as cleaner_router
-
 
 settings = get_settings()
 
@@ -18,8 +16,6 @@ logging.basicConfig(level=logging.DEBUG if settings.debug else logging.INFO)
 app = FastAPI()
 app.include_router(health_router)
 app.include_router(upload_router, prefix="/api")
-app.include_router(cleaner_router, prefix="/api")
-
 # Redis client setup
 redis_client = get_redis_client()
 

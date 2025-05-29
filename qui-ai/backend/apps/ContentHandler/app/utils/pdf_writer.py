@@ -2,6 +2,15 @@ from fpdf import FPDF
 import textwrap
 import os
 
+# Basic implementation using reportlab
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+
+
+
+
+
 
 class PDF(FPDF):
     def __init__(self):
@@ -45,18 +54,15 @@ class PDF(FPDF):
 
 
 def create_comparison_pdf(raw_text: str, cleaned_text: str, output_path: str):
-    pdf = PDF()
+    doc = SimpleDocTemplate(output_path, pagesize=letter)
+    styles = getSampleStyleSheet()
+    story = []
 
-    raw_paragraphs = raw_text.strip().split("\n\n")
-    cleaned_paragraphs = cleaned_text.strip().split("\n\n")
-    max_len = max(len(raw_paragraphs), len(cleaned_paragraphs))
+    story.append(Paragraph("Original Text", styles["Heading1"]))
+    story.append(Paragraph(raw_text, styles["Normal"]))
+    story.append(Paragraph("Cleaned Text", styles["Heading1"]))
+    story.append(Paragraph(cleaned_text, styles["Normal"]))
 
-    for i in range(max_len):
-        left = raw_paragraphs[i] if i < len(raw_paragraphs) else ""
-        right = cleaned_paragraphs[i] if i < len(cleaned_paragraphs) else ""
-        pdf.add_side_by_side(left, right)
-
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    pdf.output(output_path)
+    doc.build(story)
 
 

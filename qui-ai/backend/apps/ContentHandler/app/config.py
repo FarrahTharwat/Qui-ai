@@ -2,7 +2,40 @@ from pydantic_settings import BaseSettings
 from functools import lru_cache
 import os
 
+import logging
+from logging.config import dictConfig
 
+logging_config = dict(
+    version=1,
+    disable_existing_loggers=False,
+    formatters={
+        "standard": {
+            "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S"
+        }
+    },
+    handlers={
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
+            "level": "INFO"
+        }
+    },
+    loggers={
+        "": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": True
+        },
+        "python_multipart.multipart": {
+            "level": "WARNING",
+            "propagate": False
+        }
+    }
+)
+
+def configure_logging():
+    dictConfig(logging_config)
 class Settings(BaseSettings):
     environment: str = "development"
 

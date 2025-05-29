@@ -1,8 +1,6 @@
 # app/services/storage.py
 import os
 import psycopg2
-from psycopg2.extras import RealDictCursor
-import os
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -17,27 +15,28 @@ def save_raw_text(file_id, raw_text):
     with open(path, "w", encoding="utf-8", errors="replace") as f:
         f.write(raw_text)
 
-def load_raw_text(file_id):
-    path = os.path.join(TEXT_DIR, f"{file_id}_raw.txt")
-    if not os.path.exists(path):
-        return None
-    with open(path, "r", encoding="utf-8", errors="replace") as f:
+
+def load_raw_text(file_id: str) -> str:
+    """Load raw text from storage"""
+    file_path = f"data/texts/{file_id}_raw.txt"
+    if not os.path.exists(file_path):
+        return ""
+    with open(file_path, "r", encoding="utf-8") as f:
         return f.read()
 
-# Cleaned text handling (keep existing save_cleaned_text/load_cleaned_text)
+def save_cleaned_text(file_id: str, text: str):
+    """Save cleaned text to storage"""
+    os.makedirs("data/texts", exist_ok=True)
+    with open(f"data/texts/{file_id}_cleaned.txt", "w", encoding="utf-8") as f:
+        f.write(text)
 
-def save_cleaned_text(file_id, cleaned_text):
-    path = os.path.join(TEXT_DIR, f"{file_id}_cleaned.txt")
-    with open(path, "w", encoding="utf-8", errors="replace") as f:
-        f.write(cleaned_text)
-
-def load_cleaned_text(file_id):
-    path = os.path.join(TEXT_DIR, f"{file_id}_cleaned.txt")
-    if not os.path.exists(path):
-        return None
-    with open(path, "r", encoding="utf-8", errors="replace") as f:
+def load_cleaned_text(file_id: str) -> str:
+    """Load cleaned text from storage"""
+    file_path = f"data/texts/{file_id}_cleaned.txt"
+    if not os.path.exists(file_path):
+        return ""
+    with open(file_path, "r", encoding="utf-8") as f:
         return f.read()
-
 
 
 def get_db_connection():

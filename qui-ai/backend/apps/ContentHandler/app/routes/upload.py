@@ -1,90 +1,100 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 import os
-import shutil
+import logging
 from uuid import uuid4
-from datetime import datetime
-
+from app.services.local_cleaning_model import clean_text_locally
 from app.utils.pdf_utils import extract_text_from_pdf
-from app.services.cleaning_model import ai_clean_text, refine_cleaned_text
-from app.utils.storage import save_raw_text, save_cleaned_text, load_raw_text, load_cleaned_text, save_book_texts
-from app.utils.comparison import generate_comparison_pdf, generate_diff_html
-from fastapi.responses import FileResponse
+from app.utils.storage import (
+    save_raw_text,
+    save_cleaned_text,
+    load_cleaned_text,
+    load_raw_text
+)
 
-# If using a DB later, import your model here
-# from app.models import UploadedFile (SQLAlchemy)
-
-router = APIRouter(tags=["Upload"])
+router = APIRouter(tags=["Upload & Clean"])
+logger = logging.getLogger(__name__)
 UPLOAD_DIR = "static/uploads"
+MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
+CHUNK_SIZE = 1024 * 1024  # 1MB
+
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
-@router.post("/upload")
-async def upload_pdf(file: UploadFile = File(...)):
-    if not file.filename.endswith(".pdf"):
-        raise HTTPException(status_code=400, detail="Only PDF files are allowed")
+def cleanup_files(file_id: str, pdf_path: str):
+    """Clean up any created files in case of failure"""
+    try:
+        # Remove uploaded PDF
+        if os.path.exists(pdf_path):
+            os.remove(pdf_path)
+
+        # Remove text files
+        text_files = [
+            f"data/texts/{file_id}_raw.txt",
+            f"data/texts/{file_id}_cleaned.txt"
+        ]
+        for path in text_files:
+            if os.path.exists(path):
+                os.remove(path)
+    except Exception as e:
+        logger.warning(f"Error during cleanup: {str(e)}")
+
+
+@router.post("/upload-and-clean")
+async def upload_and_clean(file: UploadFile = File(..., max_size=MAX_FILE_SIZE)):
+    if not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(400, "Only PDF files are allowed")
 
     file_id = str(uuid4())
     filename = f"{file_id}.pdf"
     pdf_path = os.path.join(UPLOAD_DIR, filename)
 
-    # Save file
-    with open(pdf_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    try:
+        # Save PDF file
+        with open(pdf_path, "wb") as buffer:
+            while True:
+                chunk = await file.read(CHUNK_SIZE)
+                if not chunk:
+                    break
+                buffer.write(chunk)
 
-    # Extract and save raw text
-    raw_text = extract_text_from_pdf(pdf_path)
-    save_raw_text(file_id, raw_text)
+        # Extract text from PDF
+        raw_text = extract_text_from_pdf(pdf_path)
+        if not raw_text or raw_text.strip() == "":
+            raise HTTPException(400, "Failed to extract text from PDF")
 
-    # 🔥 Optional: Insert into DB later
-    # db.insert_uploaded_file(file_id=file_id, filename=file.filename, created_at=datetime.now())
+        # Check for existing cleaned text (unlikely but possible in retries)
+        existing_cleaned = load_cleaned_text(file_id)
+        if existing_cleaned:
+            return {
+                "message": "Using cached cleaned text",
+                "file_id": file_id,
+                "clean_excerpt": existing_cleaned[:500]
+            }
 
-    return {
-        "message": "File uploaded and text extracted",
-        "file_id": file_id,
-        "raw_excerpt": raw_text[:500]
-    }
+        # Save raw text using storage function
+        save_raw_text(file_id, raw_text)
 
+        # Clean text using local model
+        cleaned_text = clean_text_locally(raw_text)
+        if not cleaned_text.strip():
+            raise HTTPException(500, "Cleaning returned empty result")
 
-@router.post("/clean/{file_id}")
-async def clean_uploaded_text(file_id: str):
-    cleaned_path = f"data/texts/{file_id}_cleaned.txt"
+        # Save cleaned text using storage function
+        save_cleaned_text(file_id, cleaned_text)
 
-    if os.path.exists(cleaned_path):
-        print("⚠️ Already cleaned. Skipping cleaning step.")
-        cleaned_text = load_cleaned_text(file_id)
-        raw_text = load_raw_text(file_id)
-        final_cleaned = refine_cleaned_text(cleaned_text)
-    else:
-        raw_text = load_raw_text(file_id)
-        if not raw_text:
-            raise HTTPException(status_code=404, detail="Raw text not found")
+        return {
+            "message": "File uploaded and cleaned successfully",
+            "file_id": file_id,
+            "clean_excerpt": cleaned_text[:500]
+        }
 
-        cleaned_text = ai_clean_text(raw_text)
-        final_cleaned = refine_cleaned_text(cleaned_text)
-        save_cleaned_text(file_id, final_cleaned)
-
-    save_book_texts(
-        book_id=file_id,
-        title="Uploaded Book",
-        raw_text=raw_text,
-        cleaned_text=cleaned_text,
-        final_text=final_cleaned
-    )
-
-    return {
-        "message": "Text cleaned and saved to database",
-        "file_id": file_id,
-        "excerpt": final_cleaned[:700]
-    }
-
-
-
-
-@router.get("/compare/{file_id}")
-async def get_comparison_pdf(file_id: str):
-    pdf_path = f"data/comparisons/{file_id}_comparison.pdf"
-    if not os.path.exists(pdf_path):
-        raise HTTPException(status_code=404, detail="Comparison not found")
-    return FileResponse(pdf_path, media_type="application/pdf")
-
-
+    except HTTPException as he:
+        logger.error(f"Processing error: {str(he.detail)}")
+        cleanup_files(file_id, pdf_path)
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
+        cleanup_files(file_id, pdf_path)
+        raise HTTPException(500, detail="File processing failed")
+    finally:
+        await file.close()
