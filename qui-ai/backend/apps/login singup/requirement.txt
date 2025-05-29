@@ -1,37 +1,7 @@
-from django.core.asgi import get_asgi_application
-from pathlib import Path
-import os
-from django.contrib import admin
-from django.urls import path, include
-
-from django.core.wsgi import get_wsgi_application
-import django.db.models.deletion
-from django.conf import settings
-from django.db import migrations, models
-from django.db import migrations, models
-from django.contrib import admin
-from .models import UserProfile
-from django.contrib.auth.backends import ModelBackend
-from django.contrib.auth import get_user_model
-from django import forms
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import User
-from .models import UserProfile
-from django.contrib.auth.models import User
-from django.db import models
-from django.db.models.signals import post_save
-from django.contrib.auth.models import User
-from django.dispatch import receiver
-from .models import UserProfile
-from django.test import TestCase
-from django.urls import path, include
-from .views import authView
-from .views import home_view , update_profile
-from django.contrib.auth.views import LogoutView
-from django.shortcuts import render, redirect
-from django.contrib.auth import login, get_backends
-from .forms import CustomUserCreationForm , UserProfileForm
-from django.contrib.auth.decorators import login_required
-from .models import UserProfile
-import os
-import sys
+asgiref==3.8.1
+Django==5.1.6
+django-extensions==3.2.3
+pillow==11.1.0
+psycopg2-binary==2.9.10
+sqlparse==0.5.3
+tzdata==2025.1
