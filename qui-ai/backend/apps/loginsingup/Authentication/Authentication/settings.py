@@ -11,8 +11,9 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
-
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -57,7 +58,9 @@ ROOT_URLCONF = 'Authentication.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "templates"],
+        # 'DIRS': [BASE_DIR / "templates"],
+        # 'DIRS': [os.path.join(BASE_DIR, "templates")],
+        'DIRS': [BASE_DIR / 'base' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -76,23 +79,23 @@ WSGI_APPLICATION = 'Authentication.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.sqlite3',
-#        'NAME': BASE_DIR / 'db.sqlite3',
-#    }
-#}
-
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'authentication',
-        'USER': 'Farah_20210672@fci.helwan.edu.eg',
-        'PASSWORD': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IkpETmFfNGk0cjdGZ2lnTDNzSElsSTN4Vi1JVSIsImtpZCI6IkpETmFfNGk0cjdGZ2lnTDNzSElsSTN4Vi1JVSJ9.eyJhdWQiOiJodHRwczovL29zc3JkYm1zLWFhZC5kYXRhYmFzZS53aW5kb3dzLm5ldCIsImlzcyI6Imh0dHBzOi8vc3RzLndpbmRvd3MubmV0L2FhZGMwZTBhLTY1ZWUtNDcxYS05OWExLTlmODZmYWVjYmFlZC8iLCJpYXQiOjE3NDIzMzQ0NTYsIm5iZiI6MTc0MjMzNDQ1NiwiZXhwIjoxNzQyMzM4Njk2LCJhY3IiOiIxIiwiYWlvIjoiQVVRQXUvOFpBQUFBSzlnNCtCei8wd0NuRURmK1puYXM5b3BjWWJYaWNXdVErZWVJdXdQSXJvcnU2S2RnTzhzOWR3R3JmUnlZa1NRTmNRNnozanZpUjc5cXgrSUs2WmJ5bUE9PSIsImFtciI6WyJwd2QiXSwiYXBwaWQiOiIwNGIwNzc5NS04ZGRiLTQ2MWEtYmJlZS0wMmY5ZTFiZjdiNDYiLCJhcHBpZGFjciI6IjAiLCJmYW1pbHlfbmFtZSI6IjIwMjEwNjcyIiwiZ2l2ZW5fbmFtZSI6IkZhcmFoIiwiaWR0eXAiOiJ1c2VyIiwiaXBhZGRyIjoiMTk3LjEzMi41Ny44NCIsIm5hbWUiOiJGYXJhaCAyMDIxMDY3MiIsIm9pZCI6IjkzOGNmMDRkLTlhMDEtNDQ0Yi1iZjFjLWU5MmQ1MDYwNmZkZCIsInB1aWQiOiIxMDAzMjAwMUE2Rjc1REI5IiwicHdkX3VybCI6Imh0dHBzOi8vcG9ydGFsLm1pY3Jvc29mdG9ubGluZS5jb20vQ2hhbmdlUGFzc3dvcmQuYXNweCIsInJoIjoiMS5BUXdBQ2c3Y3F1NWxHa2Vab1otRy11eTY3VkRZUEJMZjJiMUFsTlhKOEh0X29nTU1BQmdNQUEuIiwic2NwIjoidXNlcl9pbXBlcnNvbmF0aW9uIiwic2lkIjoiMDAyMTk5YTktYzdlOC1jYzFjLTc2MzUtMDcyMDg4OTEyNWVmIiwic3ViIjoic3dCQkpReklVRzRUZm5rRmJlclZaeXBTX2R6ZDJnV2Z5QjJydHhNcUNCMCIsInRpZCI6ImFhZGMwZTBhLTY1ZWUtNDcxYS05OWExLTlmODZmYWVjYmFlZCIsInVuaXF1ZV9uYW1lIjoiRmFyYWhfMjAyMTA2NzJAZmNpLmhlbHdhbi5lZHUuZWciLCJ1cG4iOiJGYXJhaF8yMDIxMDY3MkBmY2kuaGVsd2FuLmVkdS5lZyIsInV0aSI6Ik9PdlNmMVY5QUVtUUFWWXdQQ0FRQUEiLCJ2ZXIiOiIxLjAiLCJ4bXNfaWRyZWwiOiIxIDIifQ.HkLIR8dRp7beihnErLQzOxUwxZGxt7NeuC1O7h8QxZ1SzWUcZVjT7GN3f3xDyLnn7etltAGqaaEAe-XXHy21Tpw0-b78fBMF7I7A8UBPYYJmIRRcTB_GREe8ZRygZDS_DqChDfZ7EgZFBvSb7NH92qKiAReBKebHyIPnKMR8ZoYDIsDRyenwWX9AJ7zyMXR1VJTqVuuT3KvblpPr9-j9aooYIDWz9tYTUVKstleIcVZkHmtq5MbJeaJXm_T7g9MawhjnMkCO8bnOTgXUvwwfYmkiOyd4GMPxMbbzXZTthjCYlhHuSHQ9Ebg0OtCRORsYzukPm6xXqIKNNRQ1sies-g',
-        'HOST': 'senior-demo.postgres.database.azure.com',  # or your database server IP
-        'PORT': '5432',       # Default PostgreSQL port
-    }
+   'default': {
+       'ENGINE': 'django.db.backends.sqlite3',
+       'NAME': BASE_DIR / 'db.sqlite3',
+   }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'authentication',
+#         'USER': 'Farah_20210672@fci.helwan.edu.eg',
+#         'PASSWORD': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IkpETmFfNGk0cjdGZ2lnTDNzSElsSTN4Vi1JVSIsImtpZCI6IkpETmFfNGk0cjdGZ2lnTDNzSElsSTN4Vi1JVSJ9.eyJhdWQiOiJodHRwczovL29zc3JkYm1zLWFhZC5kYXRhYmFzZS53aW5kb3dzLm5ldCIsImlzcyI6Imh0dHBzOi8vc3RzLndpbmRvd3MubmV0L2FhZGMwZTBhLTY1ZWUtNDcxYS05OWExLTlmODZmYWVjYmFlZC8iLCJpYXQiOjE3NDIzMzQ0NTYsIm5iZiI6MTc0MjMzNDQ1NiwiZXhwIjoxNzQyMzM4Njk2LCJhY3IiOiIxIiwiYWlvIjoiQVVRQXUvOFpBQUFBSzlnNCtCei8wd0NuRURmK1puYXM5b3BjWWJYaWNXdVErZWVJdXdQSXJvcnU2S2RnTzhzOWR3R3JmUnlZa1NRTmNRNnozanZpUjc5cXgrSUs2WmJ5bUE9PSIsImFtciI6WyJwd2QiXSwiYXBwaWQiOiIwNGIwNzc5NS04ZGRiLTQ2MWEtYmJlZS0wMmY5ZTFiZjdiNDYiLCJhcHBpZGFjciI6IjAiLCJmYW1pbHlfbmFtZSI6IjIwMjEwNjcyIiwiZ2l2ZW5fbmFtZSI6IkZhcmFoIiwiaWR0eXAiOiJ1c2VyIiwiaXBhZGRyIjoiMTk3LjEzMi41Ny44NCIsIm5hbWUiOiJGYXJhaCAyMDIxMDY3MiIsIm9pZCI6IjkzOGNmMDRkLTlhMDEtNDQ0Yi1iZjFjLWU5MmQ1MDYwNmZkZCIsInB1aWQiOiIxMDAzMjAwMUE2Rjc1REI5IiwicHdkX3VybCI6Imh0dHBzOi8vcG9ydGFsLm1pY3Jvc29mdG9ubGluZS5jb20vQ2hhbmdlUGFzc3dvcmQuYXNweCIsInJoIjoiMS5BUXdBQ2c3Y3F1NWxHa2Vab1otRy11eTY3VkRZUEJMZjJiMUFsTlhKOEh0X29nTU1BQmdNQUEuIiwic2NwIjoidXNlcl9pbXBlcnNvbmF0aW9uIiwic2lkIjoiMDAyMTk5YTktYzdlOC1jYzFjLTc2MzUtMDcyMDg4OTEyNWVmIiwic3ViIjoic3dCQkpReklVRzRUZm5rRmJlclZaeXBTX2R6ZDJnV2Z5QjJydHhNcUNCMCIsInRpZCI6ImFhZGMwZTBhLTY1ZWUtNDcxYS05OWExLTlmODZmYWVjYmFlZCIsInVuaXF1ZV9uYW1lIjoiRmFyYWhfMjAyMTA2NzJAZmNpLmhlbHdhbi5lZHUuZWciLCJ1cG4iOiJGYXJhaF8yMDIxMDY3MkBmY2kuaGVsd2FuLmVkdS5lZyIsInV0aSI6Ik9PdlNmMVY5QUVtUUFWWXdQQ0FRQUEiLCJ2ZXIiOiIxLjAiLCJ4bXNfaWRyZWwiOiIxIDIifQ.HkLIR8dRp7beihnErLQzOxUwxZGxt7NeuC1O7h8QxZ1SzWUcZVjT7GN3f3xDyLnn7etltAGqaaEAe-XXHy21Tpw0-b78fBMF7I7A8UBPYYJmIRRcTB_GREe8ZRygZDS_DqChDfZ7EgZFBvSb7NH92qKiAReBKebHyIPnKMR8ZoYDIsDRyenwWX9AJ7zyMXR1VJTqVuuT3KvblpPr9-j9aooYIDWz9tYTUVKstleIcVZkHmtq5MbJeaJXm_T7g9MawhjnMkCO8bnOTgXUvwwfYmkiOyd4GMPxMbbzXZTthjCYlhHuSHQ9Ebg0OtCRORsYzukPm6xXqIKNNRQ1sies-g',
+#         'HOST': 'senior-demo.postgres.database.azure.com',  # or your database server IP
+#         'PORT': '5432',       # Default PostgreSQL port
+#     }
+# }
 
 
 
@@ -148,3 +151,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #LOGOUT_REDIRECT_URL = '/'
 LOGIN_REDIRECT_URL = 'base:home'
 LOGOUT_REDIRECT_URL = 'base:login'
+
+
+mail =os.environ.get("MAIL")
+mail_pass =os.environ.get("MAIL_PASSWORD")
+
+EMAIL_BACKEND ="django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST ="smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER =mail
+EMAIL_HOST_PASSWORD =mail_pass
+DEFAULT_FROM_EMAIL =mail
+EMAIL_SUBJECT_PREFIX ="Password Recovery"

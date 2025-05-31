@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"   # Map container port 8000 to localhost:8000 (adjust as needed)
+    volumes:
+      - .:/app       # Mount current directory into container (optional)
+    environment:
+      - ENV_VAR=VALUE  # Any environment variables if needed
+    command: python app.py  # or your app's start command
