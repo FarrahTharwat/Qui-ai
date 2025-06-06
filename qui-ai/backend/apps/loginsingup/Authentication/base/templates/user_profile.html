@@ -1,0 +1,103 @@
+{% comment %} <h2>{{ user_profile.username }}'s Profile</h2>
+
+{% if user_profile.userprofile.profile_picture %}
+  <img src="{{ user_profile.userprofile.profile_picture.url }}" alt="Profile Picture" width="200">
+{% else %}
+  <p>No profile picture uploaded.</p>
+{% endif %}
+
+<!-- Only show buttons if the visitor is not viewing their own profile -->
+{% if request.user != user_profile %}
+
+  {% if not sent_request %}
+    <form method="post" action="{% url 'send_friend_request' user_profile.id %}">
+      {% csrf_token %}
+      <button type="submit">Add Friend</button>
+    </form>
+  {% else %}
+    <p>Friend request sent</p>
+  {% endif %}
+
+  {% if not is_following %}
+    <form method="post" action="{% url 'follow_user' user_profile.id %}">
+      {% csrf_token %}
+      <button type="submit">Follow</button>
+    </form>
+  {% else %}
+    <p>Following</p>
+  {% endif %}
+{% endif %} {% endcomment %}
+
+
+
+
+
+<!-- Header with Username and Logout Button -->
+<header style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f5f5f5; border-bottom: 1px solid #ccc;">
+
+  <h2>{{ user_profile.username }}'s Profile</h2>
+
+  {% if user.is_authenticated %}
+    <form action="{% url 'base:logout' %}" method="post" style="margin: 0;">
+      {% csrf_token %}
+      <button type="submit" style="padding: 6px 12px; background-color: #f44336; color: white; border: none; border-radius: 4px; font-size: 14px; cursor: pointer;">
+        Log out
+      </button>
+    </form>
+  {% endif %}
+
+</header>
+
+
+<p>Friends: {{ friends_count }}</p>
+<p>Followers: {{ followers_count }}</p>
+<p>Following: {{ following_count }}</p>
+
+{% if user_profile.userprofile.profile_picture %}
+  <img src="{{ user_profile.userprofile.profile_picture.url }}" alt="Profile Picture" width="200">
+{% else %}
+  <p>No profile picture uploaded.</p>
+{% endif %}
+
+<!-- Only show buttons if the visitor is not viewing their own profile -->
+{% if request.user != user_profile %}
+
+  {% if are_friends %}
+    <p>You and {{ user_profile.username }} are friends.</p>
+
+  {% else %}
+    {% if sent_request %}
+      <p>Friend request sent</p>
+
+    {% elif received_request %}
+      <form method="post" action="{% url 'base:accept_friend_request' user_profile.id %}">
+        {% csrf_token %}
+        <button type="submit">Accept Friend Request</button>
+      </form>
+      <form method="post" action="{% url 'base:reject_friend_request' user_profile.id %}">
+        {% csrf_token %}
+        <button type="submit">Reject Friend Request</button>
+      </form>
+
+    {% else %}
+      <form method="post" action="{% url 'base:send_friend_request' user_profile.id %}">
+        {% csrf_token %}
+        <button type="submit">Add Friend</button>
+      </form>
+    {% endif %}
+  {% endif %}
+
+  {% if is_following %}
+    <p>Following</p>
+  {% else %}
+    <form method="post" action="{% url 'base:follow_user' user_profile.id %}">
+      {% csrf_token %}
+      <button type="submit">Follow</button>
+    </form>
+  {% endif %}
+
+{% else %}
+  <p>This is your profile.</p>
+{% endif %}
+
+

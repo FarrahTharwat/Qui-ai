@@ -1,0 +1,44 @@
+<h1>{{ request.user.username }}'s Profile</h1>
+
+{% if request.user.userprofile.profile_picture %}
+  <img src="{{ request.user.userprofile.profile_picture.url }}" alt="Profile Picture" width="200" />
+{% else %}
+  <p>No profile picture uploaded.</p>
+{% endif %}
+
+
+<form method="POST"  enctype="multipart/form-data">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Upload Picture</button>
+</form>
+
+<hr>
+
+<!-- Friend Request Section -->
+{% if friend_requests %}
+  <h3>Pending Friend Requests</h3>
+  {% for request in friend_requests %}
+    <p>{{ request.from_user.username }} wants to be your friend</p>
+    <form method="post" action="{% url 'base:accept_friend_request' request.id %}">
+      {% csrf_token %}
+      <button type="submit">Accept</button>
+    </form>
+    <form method="post" action="{% url 'base:reject_friend_request' request.id %}">
+      {% csrf_token %}
+      <button type="submit">Reject</button>
+    </form>
+    <hr>
+  {% endfor %}
+{% else %}
+  <p>No pending friend requests.</p>
+{% endif %}
+
+
+
+{% comment %} <!-- Example: buttons to interact with another user (only show if viewing another user's profile) -->
+{% if user.id != request.user.id %}
+<a href="{% url 'send_friend_request' user.id %}">Add Friend</a>
+<a href="{% url 'follow_user' user.id %}">Follow</a>
+{% endif %} {% endcomment %}
+
