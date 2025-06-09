@@ -1,8 +1,8 @@
-from pymongo import MongoClient
-from motor.motor_asyncio import AsyncIOMotorClient
+import motor.motor_asyncio
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
-MONGO_URI = "mongodb+srv://Fatma:Kiqvez-sikpu6-dargez@track-progress.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000"
-client = AsyncIOMotorClient(MONGO_URI)
-db = client["achievements-DB"]
-achievements_collection = db["achievements"]
-user_achievements_collection = db["user_achievements"]
+db_url = os.getenv("MONGO_URL")
+client = motor.motor_asyncio.AsyncIOMotorClient(db_url)
+db = client["achievements_db"]

@@ -1,9 +1,15 @@
 from fastapi import FastAPI
-from routes import router
+from routes.achievement_routes import router
+from database import db
 
-app = FastAPI(title="Achievements Microservice")
+app = FastAPI()
 
-app.include_router(router, prefix="/achievements")
+@app.on_event("startup")
+async def startup():
+    app.mongodb = db
 
+@app.on_event("shutdown")
+async def shutdown():
+    app.mongodb = None
 
-# Run with: uvicorn main:app --reload
+app.include_router(router)
