@@ -7,6 +7,270 @@
     <button type="submit">Login</button>
     <a href="{% url 'password_reset'%}">Forget Password </a>
 </form>
-{% endblock content %}
+{% endblock content %} {% endcomment %}
 
+{% load static %}
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.20.15/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style type="text/css">
+        @font-face {
+            font-family: 'Madani';
+            src: upython manage.py collectstatic
+rl("{% static 'Fonts/MadaniArabic-Regular.ttf' %}") format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Madani';
+            src:  url("{% static 'Fonts/MadaniArabic-Bold.ttf' %}") format('truetype'); 
+            font-weight: bold;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        body {
+            font-family: 'Madani', sans-serif;
+        }
+
+        input, button, p, h1, span, a, svg, i {
+            font-family: 'Madani', sans-serif;
+        }
+        .error-message-placeholder {
+            min-height: 1.25rem; 
+        }
+        .icon-container span i {
+             height: 1.25rem; 
+             width: 1.25rem;
+             display: inline-flex;
+             align-items: center;
+             justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Helper component for input fields - DEFINED OUTSIDE LoginForm
+        const FormField = ({ fieldRef, type, name, value, placeholder, onChange, onKeyPress, error, iconClass, isPassword, show, toggleShow }) => (
+            <div>
+                <div className="relative icon-container">
+                    <input
+                        ref={fieldRef}
+                        type={type}
+                        name={name}
+                        value={value}
+                        onChange={onChange}
+                        onKeyPress={onKeyPress}
+                        placeholder={placeholder}
+                        className={`w-full p-3 bg-white bg-opacity-20 text-white placeholder-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c74ece] ${iconClass || isPassword ? 'pr-10 sm:pr-12' : ''}`}
+                        aria-invalid={!!error}
+                        aria-describedby={error ? `${name}-error` : undefined}
+                    />
+                    {(iconClass || isPassword) && (
+                        <span
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-300"
+                            style={isPassword ? { cursor: 'pointer', zIndex: 10 } : { pointerEvents: 'none' }}
+                            onClick={isPassword ? toggleShow : undefined}
+                        >
+                            {isPassword ? (show ? <i className="fas fa-eye-slash"></i> : <i className="fas fa-eye"></i>) : <i className={iconClass}></i>}
+                        </span>
+                    )}
+                </div>
+                <p id={`${name}-error`} className={`text-red-400 text-sm mt-1 error-message-placeholder ${error ? 'opacity-100' : 'opacity-0'}`}>
+                    {error || ''}
+                </p>
+            </div>
+        );
+
+        const LoginForm = () => {
+            const [formData, setFormData] = React.useState({
+                emailOrUsername: '',
+                password: ''
+            });
+            const [errors, setErrors] = React.useState({});
+            const [isSubmitting, setIsSubmitting] = React.useState(false);
+            const [showPassword, setShowPassword] = React.useState(false);
+
+            const emailOrUsernameRef = React.useRef(null);
+            const passwordRef = React.useRef(null);
+
+            const fieldRefs = { 
+                emailOrUsername: emailOrUsernameRef,
+                password: passwordRef
+            };
+
+            React.useEffect(() => {
+                if (emailOrUsernameRef.current) {
+                    emailOrUsernameRef.current.focus();
+                }
+            }, []);
+
+            const validateField = (name, value) => {
+                let errorMsg = '';
+                switch (name) {
+                    case 'emailOrUsername':
+                        if (!value || String(value).trim() === '') {
+                            errorMsg = 'Please enter your email or username.';
+                        }
+                        break;
+                    case 'password':
+                        if (!value) { 
+                            errorMsg = 'Please enter your password.';
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                setErrors(prevErrors => ({ ...prevErrors, [name]: errorMsg }));
+                return errorMsg === '';
+            };
+
+            const validateFormOnSubmit = () => {
+                let isFormValid = true;
+                for (const fieldName in formData) {
+                    if (!validateField(fieldName, formData[fieldName])) {
+                        isFormValid = false;
+                    }
+                }
+                return isFormValid;
+            };
+
+            const handleChange = (e) => {
+                const { name, value } = e.target;
+                setFormData(prev => ({ ...prev, [name]: value }));
+                validateField(name, value);
+            };
+
+            const handleKeyPress = (e, nextFieldRef) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); 
+                    if (nextFieldRef && nextFieldRef.current) {
+                        nextFieldRef.current.focus(); 
+                    } else {
+                        handleSubmit(e); 
+                    }
+                }
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                setIsSubmitting(true);
+
+                if (validateFormOnSubmit()) {
+                    setTimeout(() => {
+                        console.log('Attempting to log in with:', formData);
+                        alert('Login Successful! Redirecting to Home Page...'); 
+                        window.location.href = '/';
+                    }, 500);
+                } else {
+                    setIsSubmitting(false);
+                     setTimeout(() => {
+                        const currentErrors = errors;
+                        const firstErrorField = Object.keys(fieldRefs).find(fieldName => currentErrors[fieldName]);
+                        if (firstErrorField && fieldRefs[firstErrorField] && fieldRefs[firstErrorField].current) {
+                            fieldRefs[firstErrorField].current.focus();
+                        }
+                    }, 0);
+                }
+            };
+
+            return (
+                <div className="min-h-screen relative flex items-center justify-center bg-gradient-to-br from-[#3c0089] via-black to-[#c74ece] px-4 sm:px-6 lg:px-8">
+
+                    <div className="absolute top-0 w-full flex justify-between items-center px-4 sm:px-6 lg:px-8 py-4">
+                        <span className="text-white text-3xl font-bold">QUI.Ai</span>
+                        <a
+                            href="/accounts/signup/"
+                            className="bg-white text-[#c74ece] font-semibold py-2 px-6 rounded-full hover:bg-purple-100 transition duration-300"
+                        >
+                            SIGN UP
+                        </a>
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center w-full max-w-md sm:max-w-lg lg:max-w-xl py-8">
+                        <h1 className="text-white text-3xl font-bold mb-10 mt-16 text-center">Log in</h1>
+                        <form onSubmit={handleSubmit} className="bg-white bg-opacity-10 p-8 rounded-lg w-full max-w-md" noValidate>
+                            <div className="space-y-4"> {/* Input fields container */}
+                                <FormField
+                                    fieldRef={emailOrUsernameRef} type="text" name="emailOrUsername"
+                                    value={formData.emailOrUsername} onChange={handleChange}
+                                    onKeyPress={(e) => handleKeyPress(e, passwordRef)} placeholder="Email or username"
+                                    error={errors.emailOrUsername} iconClass="fas fa-user"
+                                />
+                                <FormField
+                                    fieldRef={passwordRef} type={showPassword ? 'text' : 'password'} name="password"
+                                    value={formData.password} onChange={handleChange}
+                                    onKeyPress={(e) => handleKeyPress(e, null)} placeholder="Password"
+                                    error={errors.password} isPassword={true} show={showPassword}
+                                    toggleShow={() => setShowPassword(!showPassword)}
+                                />
+                            </div> {/* End of input fields container */}
+
+                            <a href="Forgot_Password.html" className="text-right text-sm text-gray-300 hover:text-white block mt-4 mb-4">FORGOT PASSWORD?</a>
+                            
+                            {/* Buttons and OR separator container */}
+                            <div className="space-y-4">
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className={`w-full py-3 bg-[#c74ece] text-white font-semibold rounded-lg transition-all duration-300 transform ${
+                                        isSubmitting 
+                                            ? 'scale-95 bg-[#ac3cbf] opacity-70 cursor-not-allowed' 
+                                            : 'hover:scale-105 hover:bg-[#b035dd]'
+                                    }`}
+                                >
+                                    {isSubmitting ? 'LOGGING IN...' : 'LOG IN'}
+                                </button>
+
+                                <div className="flex items-center"> {/* OR separator */}
+                                    <div className="flex-grow h-px bg-white opacity-30"></div>
+                                    <span className="mx-4 text-white opacity-70">OR</span>
+                                    <div className="flex-grow h-px bg-white opacity-30"></div>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    className="w-full py-3 flex items-center justify-center bg-white text-gray-800 font-semibold rounded-lg hover:bg-gray-100 transition duration-300"
+                                    onClick={() => alert('Sign in with Google (functionality to be implemented)')}
+                                    disabled={isSubmitting}
+                                >
+                                    <img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google logo" className="h-5 w-5 mr-2" />
+                                    Sign in with Google
+                                </button>
+                            </div> {/* End of buttons and OR separator container */}
+                        </form>
+                        <div className="text-center mt-6"> {/* Changed from flex items-center to text-center for T&C links */}
+                            <p className="text-white text-sm opacity-70">
+                                By signing in to Q.Ai, you agree to our{' '}
+                                <a href="#" className="underline">Terms</a> and{' '}
+                                <a href="#" className="underline">Privacy Policy</a>.
+                            </p>
+                            <p className="text-white text-sm opacity-70 mt-2">
+                                This site is protected by reCAPTCHA Enterprise and the{' '}
+                                <a href="#" className="underline">Google Privacy Policy</a> and{' '}
+                                <a href="#" className="underline">Terms of Service</a> apply.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<LoginForm />);
+    </script></body>
+</html>
