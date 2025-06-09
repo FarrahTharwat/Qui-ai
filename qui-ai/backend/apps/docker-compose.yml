@@ -1,0 +1,33 @@
+# version: "3.8"
+services:
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+
+  track_progress:
+    build: ./track_progress
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./track_progress/.env
+    depends_on:
+      - mongo
+
+  xp_points:
+    build: ./xp_points
+    ports:
+      - "8001:8000"
+    env_file:
+      - ./xp_points/.env
+    depends_on:
+      - mongo
+
+  achievements:
+    build: ./achievements
+    ports:
+      - "8002:8000"
+    env_file:
+      - ./achievements/.env
+    depends_on:
+      - mongo
