@@ -1,9 +1,10 @@
 from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import List, Optional, Dict, Any
 from datetime import datetime
+import json
 from enum import Enum
 from db_connection import Base, engine
 
@@ -35,7 +36,6 @@ class Course(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(200), nullable=False)
     description = Column(Text)
-    # FIX: Specify native_enum=False to use string values instead of native PostgreSQL enums
     difficulty = Column(SQLEnum(DifficultyLevel, native_enum=False), default=DifficultyLevel.BEGINNER)
     estimated_duration_hours = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
@@ -50,20 +50,29 @@ class Topic(Base):
     __tablename__ = "topics"
 
     id = Column(Integer, primary_key=True, index=True)
-    course_id = Column(Integer, ForeignKey("courses.id"), nullable=False)
-    title = Column(String(200), nullable=False)
+    title = Column(String, nullable=False)
     description = Column(Text)
     order_index = Column(Integer, nullable=False)
-    difficulty = Column(SQLEnum(DifficultyLevel, native_enum=False), default=DifficultyLevel.BEGINNER)
-    prerequisites = Column(Text, default='[]')  # JSON array of topic IDs
-    estimated_duration_minutes = Column(Integer, default=30)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    difficulty = Column(String, nullable=False)
+    prerequisites = Column(Text)  # Stored as JSON string
+    estimated_duration_minutes = Column(Integer)
+    course_id = Column(Integer, ForeignKey("courses.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
     course = relationship("Course", back_populates="topics")
     lessons = relationship("Lesson", back_populates="topic", cascade="all, delete-orphan")
+
+    @property
+    def prerequisites_list(self):
+        """Return prerequisites as a list"""
+        if self.prerequisites:
+            try:
+                return json.loads(self.prerequisites)
+            except (json.JSONDecodeError, TypeError):
+                return []
+        return []
 
 
 class Lesson(Base):
@@ -83,7 +92,6 @@ class Lesson(Base):
     estimated_duration_minutes = Column(Integer, default=15)
     xp_reward = Column(Integer, default=10)
     status = Column(SQLEnum(LessonStatus, native_enum=False), default=LessonStatus.DRAFT)
-    # Map to 'metadata' column in database but use 'lesson_metadata' attribute in Python
     lesson_metadata = Column('metadata', Text, default='{}')  # JSON for additional data
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -96,7 +104,7 @@ class Lesson(Base):
 Base.metadata.create_all(bind=engine)
 
 
-# Pydantic Models (Keep these as they are - they're correct)
+# Pydantic Models
 class CourseBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
     description: Optional[str] = None
@@ -148,14 +156,35 @@ class TopicUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 
-class TopicResponse(TopicBase):
+# FIXED TopicResponse Model
+class TopicResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    title: str
+    description: Optional[str] = None
+    order_index: int
+    difficulty: str  # Keep as string since it's stored as string in DB
+    prerequisites: List[int] = Field(default_factory=list)  # Changed from List[str] to List[int]
+    estimated_duration_minutes: Optional[int] = None
     course_id: int
-    is_active: bool
     created_at: datetime
     updated_at: datetime
+
+    @field_validator('prerequisites', mode='before')
+    @classmethod
+    def parse_prerequisites(cls, v):
+        if isinstance(v, str):
+            try:
+                parsed = json.loads(v)
+                # Ensure all items are integers
+                return [int(item) for item in parsed if isinstance(item, (int, str)) and str(item).isdigit()]
+            except (json.JSONDecodeError, TypeError, ValueError):
+                return []
+        elif isinstance(v, list):
+            # Ensure all items are integers
+            return [int(item) for item in v if isinstance(item, (int, str)) and str(item).isdigit()]
+        return []
 
 
 class LessonBase(BaseModel):
@@ -192,6 +221,7 @@ class LessonUpdate(BaseModel):
     lesson_metadata: Optional[Dict[str, Any]] = None
 
 
+# FIXED LessonResponse Model with JSON field validators
 class LessonResponse(LessonBase):
     model_config = ConfigDict(from_attributes=True)
 
@@ -201,6 +231,68 @@ class LessonResponse(LessonBase):
     lesson_metadata: Optional[Dict[str, Any]] = None
     created_at: datetime
     updated_at: datetime
+
+    # Add field validators for JSON fields
+    @field_validator('prerequisites', mode='before')
+    @classmethod
+    def parse_prerequisites(cls, v):
+        if isinstance(v, str):
+            try:
+                parsed = json.loads(v)
+                return [int(item) for item in parsed if isinstance(item, (int, str)) and str(item).isdigit()]
+            except (json.JSONDecodeError, TypeError, ValueError):
+                return []
+        elif isinstance(v, list):
+            return [int(item) for item in v if isinstance(item, (int, str)) and str(item).isdigit()]
+        return []
+
+    @field_validator('learning_objectives', mode='before')
+    @classmethod
+    def parse_learning_objectives(cls, v):
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except (json.JSONDecodeError, TypeError):
+                return []
+        elif isinstance(v, list):
+            return v
+        return []
+
+    @field_validator('key_concepts', mode='before')
+    @classmethod
+    def parse_key_concepts(cls, v):
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except (json.JSONDecodeError, TypeError):
+                return []
+        elif isinstance(v, list):
+            return v
+        return []
+
+    @field_validator('examples', mode='before')
+    @classmethod
+    def parse_examples(cls, v):
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except (json.JSONDecodeError, TypeError):
+                return []
+        elif isinstance(v, list):
+            return v
+        return []
+
+    @field_validator('lesson_metadata', mode='before')
+    @classmethod
+    def parse_lesson_metadata(cls, v):
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except (json.JSONDecodeError, TypeError):
+                return {}
+        elif isinstance(v, dict):
+            return v
+        return {}
 
 
 class LessonWithContentResponse(LessonResponse):
