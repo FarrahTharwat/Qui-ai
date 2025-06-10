@@ -1,6 +1,5 @@
 import os
 import asyncio
-import subprocess
 import redis
 import warnings
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -17,54 +16,111 @@ load_dotenv()
 LEADERBOARD_PREFIX = "course_leaderboard:"
 TRACKING_SERVICE_URL = os.getenv("TRACKING_SERVICE_URL")
 
-# Redis Configuration
+# Redis Configuration - using Redis Cloud or local Redis
 redis_client = redis.Redis(
-    host=os.getenv("REDIS_HOST"),
-    port=int(os.getenv("REDIS_PORT", 6380)),
+    host=os.getenv("REDIS_HOST", "localhost"),
+    port=int(os.getenv("REDIS_PORT", 6379)),
     password=os.getenv("REDIS_PASSWORD"),
-    ssl=True,
-    ssl_cert_reqs=None,
+    ssl=os.getenv("REDIS_SSL", "false").lower() == "true",
+    ssl_cert_reqs=None if os.getenv("REDIS_SSL", "false").lower() == "true" else None,
     decode_responses=True
 )
 
-# PostgreSQL Initialization
-async def get_azure_token():
-    try:
-        result = subprocess.run(
-            ["az", "account", "get-access-token", "--resource",
-             "https://ossrdbms-aad.database.windows.net", "--query", "accessToken", "-o", "tsv"],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        return result.stdout.strip()
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"Azure CLI error: {e.stderr}") from e
+
+# Supabase PostgreSQL Configuration
+def get_database_url():
+    """Build Supabase database URL from environment variables"""
+    supabase_url = os.getenv("SUPABASE_URL")
+    supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")  # Service role key for server-side
+
+    # Alternative: Direct database connection
+    if os.getenv("DATABASE_URL"):
+        return os.getenv("DATABASE_URL")
+
+    # Build from individual components
+    db_user = os.getenv("DB_USER", "postgres")
+    db_password = os.getenv("DB_PASSWORD")
+    db_host = os.getenv("DB_HOST")
+    db_port = os.getenv("DB_PORT", "5432")
+    db_name = os.getenv("DB_NAME", "postgres")
+
+    if not all([db_password, db_host]):
+        raise ValueError("Missing required database connection parameters. Set DATABASE_URL or DB_HOST, DB_PASSWORD")
+
+    return f"postgresql+asyncpg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?sslmode=require"
+
 
 engine = None
 async_session_maker = None
 
+
 async def initialize_db():
+    """Initialize database connection"""
     global engine, async_session_maker
-    access_token = await get_azure_token()
-    DATABASE_URL = f"postgresql+asyncpg://{os.getenv('POSTGRES_USER')}:{access_token}@{os.getenv('POSTGRES_HOST')}:5432/{os.getenv('POSTGRES_DB')}?sslmode=require"
-    engine = create_async_engine(DATABASE_URL, echo=True)
-    async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+    database_url = get_database_url()
+    engine = create_async_engine(
+        database_url,
+        echo=os.getenv("SQL_ECHO", "false").lower() == "true",
+        pool_size=10,
+        max_overflow=20
+    )
+    async_session_maker = sessionmaker(
+        engine,
+        class_=AsyncSession,
+        expire_on_commit=False
+    )
+
 
 async def get_db():
+    """Database dependency for FastAPI"""
     if not async_session_maker:
         await initialize_db()
     async with async_session_maker() as session:
         yield session
 
+
 async def sync_redis_with_postgresql():
+    """Background task to sync PostgreSQL data to Redis"""
     while True:
         try:
+            if not async_session_maker:
+                await initialize_db()
+
             async with async_session_maker() as db:
                 result = await db.execute(select(Leaderboard))
-                for entry in result.scalars():
-                    redis_client.zadd(f"{LEADERBOARD_PREFIX}{entry.course_id}", {entry.username: entry.score})
-            await asyncio.sleep(300)
+                entries = result.scalars().all()
+
+                # Use pipeline for efficient Redis operations
+                with redis_client.pipeline() as pipe:
+                    for entry in entries:
+                        redis_key = f"{LEADERBOARD_PREFIX}{entry.course_id}"
+                        pipe.zadd(redis_key, {entry.username: entry.score})
+                    pipe.execute()
+
+                print(f"Synced {len(entries)} leaderboard entries to Redis")
+
         except Exception as e:
             print(f"Sync error: {e}")
-            await asyncio.sleep(60)
+            await asyncio.sleep(60)  # Wait before retrying on error
+            continue
+
+        await asyncio.sleep(300)  # Sync every 5 minutes
+
+
+async def test_connections():
+    """Test both database and Redis connections"""
+    try:
+        # Test database connection
+        await initialize_db()
+        async with async_session_maker() as db:
+            await db.execute(select(1))
+        print("✅ Database connection successful")
+
+        # Test Redis connection
+        redis_client.ping()
+        print("✅ Redis connection successful")
+
+    except Exception as e:
+        print(f"❌ Connection test failed: {e}")
+        raise
