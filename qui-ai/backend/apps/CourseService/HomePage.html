@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUI.AI - Learn</title>
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.20.15/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style type="text/css">
+        @font-face { font-family: 'Madani'; src: url('./Fonts/Madani Arabic Regular.ttf') format('truetype'); }
+        @font-face { font-family: 'Madani'; src: url('./Fonts/Madani Arabic Bold.ttf') format('truetype'); font-weight: bold; }
+        body { font-family: 'Madani', sans-serif; background-color: black; overflow-x: hidden; }
+        .full-page-bg { min-height: 100vh; background-color: black; background-image: radial-gradient(at bottom right, #c74ece 0%, #3c0089 50%, #1a0033 70%); background-size: 300% 300%; background-position: 0% 50%; animation: moveGradient 10s ease infinite alternate; position: relative; overflow-x: hidden; }
+        @keyframes moveGradient { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+        .sidebar { background-color: #1a1a1a; z-index: 15; width: 200px; flex-shrink: 0; min-height: 100vh; position: fixed; top: 0; left: 0; padding-top: 2rem; display: flex; flex-direction: column; }
+        .sidebar-item { display: flex; align-items: center; padding: 0.75rem 1rem; margin-bottom: 0.5rem; cursor: pointer; transition: background-color 0.2s ease-in-out; text-decoration: none; }
+        .sidebar-item:hover { background-color: #2a2a2a; }
+        .sidebar-item.active { background-color: #c74ece; color: white; border-top-right-radius: 9999px; border-bottom-right-radius: 9999px; padding-right: 2rem; }
+        .sidebar-logo { font-size: 2rem; font-weight: bold; color: white; padding: 0 1rem 1.5rem; display: block; }
+        .top-header { background-color: #1a1a1a; height: 60px; width: calc(100% - 200px); position: fixed; top: 0; right: 0; z-index: 10; display: flex; align-items: center; justify-content: flex-end; padding: 0 2rem; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); color: white; gap: 1.5rem; }
+        .header-item { display: flex; align-items: center; cursor: pointer; position: relative; padding: 0.5rem; border-radius: 0.5rem; transition: background-color 0.2s; }
+        .header-item:hover { background-color: #2a2a2a; }
+        .header-item span { font-weight: bold; margin-left: 0.5rem; color: white; }
+        .dropdown-content { position: absolute; top: calc(100% + 0.5rem); right: 0; background-color: #1c1c1c; border-radius: 0.5rem; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); min-width: 250px; padding: 0.5rem; z-index: 20; display: none; flex-direction: column; white-space: nowrap; }
+        .header-item:hover .dropdown-content { display: flex; }
+        .dropdown-item { padding: 0.75rem 1rem; color: white; cursor: pointer; transition: background-color 0.2s; border-radius: 0.3rem; display: flex; align-items: center; }
+        .dropdown-item:hover { background-color: #2a2a2a; }
+        .dropdown-item.active-course { background-color: #c74ece; }
+        .path-node-tooltip { visibility: hidden; opacity: 0; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; }
+        .path-node:hover .path-node-tooltip { visibility: visible; opacity: 1; }
+        .node-shadow { box-shadow: 0px 6px 0px 0px rgba(0,0,0,0.2); }
+        
+        /* NEW: Styles for the speech bubble */
+        .speech-bubble {
+            position: absolute;
+            background-color: #1f2937; /* A dark gray from Tailwind's palette */
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 1rem;
+            font-weight: bold;
+            white-space: nowrap;
+            bottom: 50%;
+            transform: translateY(-50%);
+        }
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -6px; /* Position the tail at the bottom */
+            border-style: solid;
+        }
+        .speech-bubble.left {
+            left: 110%; /* Position to the right of the robot */
+        }
+        .speech-bubble.left::after {
+            left: 1.5rem; /* Position tail on the left side of the bubble */
+            border-width: 10px 10px 0 10px; /* Triangle pointing down */
+            border-color: #1f2937 transparent transparent transparent;
+        }
+         .speech-bubble.right {
+            right: 110%; /* Position to the left of the robot */
+        }
+        .speech-bubble.right::after {
+            right: 1.5rem; /* Position tail on the right side of the bubble */
+            border-width: 10px 10px 0 10px; /* Triangle pointing down */
+            border-color: #1f2937 transparent transparent transparent;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        // --- COMPONENTS ---
+        const Sidebar = () => { const handleLogout = (e) => { e.preventDefault(); localStorage.removeItem('Q.Ai_userData'); window.location.href = 'Login.html'; }; const sidebarItems = [ { icon: 'fa-graduation-cap', text: 'LEARN', link: 'HomePage.html', active: true }, { icon: 'fa-upload', text: 'USER UPLOADS', link: '#', active: false }, { icon: 'fa-trophy', text: 'LEADERBOARDS', link: 'Leaderboards.html', active: false }, { icon: 'fa-user', text: 'PROFILE', link: 'MyProfile.html', active: false }, ]; return ( <div className="sidebar"> <a href="HomePage.html" className="sidebar-logo">QUI.AI</a> <div> {sidebarItems.map(item => ( <a key={item.text} href={item.link} className={`sidebar-item ${item.active ? 'active' : ''}`}> <i className={`fas ${item.icon} mr-3 text-white`}></i> <span className="text-lg font-semibold text-white">{item.text}</span> </a> ))} </div> <div className="relative group mt-auto mb-2"> <div className="sidebar-item"> <i className="fas fa-ellipsis-h mr-3 text-white"></i> <span className="text-lg font-semibold text-white">MORE</span> </div> <div className="absolute bottom-full left-0 mb-2 w-[190px] bg-[#2a2a2a] rounded-lg shadow-lg hidden group-hover:block transition-all duration-300 opacity-0 group-hover:opacity-100"> <button onClick={handleLogout} className="w-full text-left flex items-center text-white px-4 py-3 hover:bg-red-600 rounded-lg"> <i className="fas fa-sign-out-alt mr-3 text-white"></i> Log Out </button> </div> </div> </div> ); };
+        const TopHeader = ({ dayStreak, lives, currentCourse, onCourseChange }) => { const courses = [ { id: 1, name: "Computer Vision", icon: "fa-eye" }, { id: 2, name: "Cloud", icon: "fa-cloud" }, { id: 3, name: "Deep Learning", icon: "fa-layer-group" }, { id: 4, name: "Machine Learning", icon: "fa-cogs" }, { id: 5, name: "NLP", icon: "fa-comment-dots" }, { id: 6, name: "Neural Networks", icon: "fa-brain" }, { id: 7, name: "Robotics", icon: "fa-robot" }, ]; return ( <div className="top-header"> <div className="header-item"> <i className="fas fa-fire text-orange-400"></i> <span>{dayStreak}</span> </div> <div className="header-item"> <i className="fas fa-heart text-red-500"></i> <span>{lives}</span> </div> <div className="header-item group"> <i className="fas fa-flag text-white"></i> <span>{currentCourse}</span> <div className="dropdown-content group-hover:flex"> {courses.map(course => ( <div key={course.id} onClick={() => onCourseChange(course.name)} className={`dropdown-item ${course.name === currentCourse ? 'active-course' : ''}`}> <i className={`fas ${course.icon} mr-3 text-white`}></i>{course.name} </div> ))} </div> </div> <div className="header-item"> <i className="fas fa-bell text-white"></i> </div> </div> ); };
+        const PathNode = ({ status, title, side, lessonId }) => { const isUnlocked = status === 'unlocked'; const isCompleted = status === 'completed'; const baseClasses = "w-24 h-24 rounded-full flex items-center justify-center relative transform hover:scale-110 transition-transform duration-300 node-shadow border-4"; const colorClasses = isCompleted ? "bg-purple-500 border-purple-400" : isUnlocked ? "bg-pink-500 border-pink-400 animate-pulse" : "bg-gray-700 border-gray-600"; const iconClasses = `fas ${isCompleted ? 'fa-check' : 'fa-star'} text-4xl text-white`; const positionClass = side === 'left' ? 'self-start' : 'self-end'; return ( <div className={`path-node relative flex justify-center ${positionClass}`} style={{ flexBasis: '50%' }}> {isUnlocked && <a href={`CoursePage.html?lesson=${lessonId}`} className="absolute -top-12 left-1/2 -translate-x-1/2 bg-green-500 text-white font-bold py-2 px-6 rounded-full shadow-lg hover:bg-green-400 transition-colors z-10">START</a>} <div className={`${baseClasses} ${colorClasses}`}> <i className={iconClasses}></i> </div> <div className="path-node-tooltip absolute top-full mt-3 w-max max-w-xs bg-black bg-opacity-80 text-white text-center text-sm font-bold py-2 px-4 rounded-lg z-20"> {title} <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-0 h-0 border-8 border-transparent border-b-black border-opacity-80"></div> </div> </div> ); };
+        const SectionHeader = ({ unit, title, sectionId }) => ( <div className="bg-gradient-to-r from-[#1e003b] to-[#3c0089] text-white p-4 rounded-xl my-8 flex justify-between items-center shadow-lg max-w-md mx-auto border border-purple-500"> <div> <p className="font-bold text-sm opacity-80 text-left">{unit}</p> <h2 className="text-2xl font-bold text-left">{title}</h2> </div> <a href={`ArticlePage.html?section=${sectionId}`} className="bg-purple-600 hover:bg-purple-500 font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors"> <i className="fas fa-book text-white"></i> GUIDEBOOK </a> </div> );
+        const LeaderboardPreviewPanel = ({ league, rank, xp }) => ( <div className="bg-[#1c1c1c] rounded-xl p-4 text-center text-white"> <i className="fas fa-gem text-3xl text-red-500"></i> <h3 className="font-bold text-lg mt-1">{league} League</h3> <hr className="border-gray-700 my-3"/> <div> <p className="text-sm text-gray-400">Current Rank</p> <p className="font-bold text-xl">{rank || 'N/A'}</p> </div> <div className="mt-2"> <p className="text-sm text-gray-400">Total XP</p> <p className="font-bold text-xl">{xp}</p> </div> <a href="Leaderboards.html" className="block w-full mt-4 font-bold py-2 bg-[#4a4a4a] hover:bg-[#5a5a5a] rounded-lg transition-colors">VIEW LEADERBOARD</a> </div> );
+        const StatusPanel = ({ avatar, statusEmoji }) => ( <div className="bg-[#1c1c1c] rounded-xl p-4 text-center"> <div className="relative w-24 h-24 rounded-full mx-auto mb-3"> <img src={avatar || 'images/Fouad-01.png'} alt="Your avatar" className="w-full h-full object-cover rounded-full" /> <div className="absolute -top-2 -right-2 text-4xl bg-[#1c1c1c] rounded-full p-1">{statusEmoji}</div> </div> <h3 className="font-bold text-white">Your Status</h3> <p className="text-sm text-gray-400">You are on a roll!</p> </div> );
+        // The CheckpointNode is unchanged, as requested.
+        const CheckpointNode = ({ text }) => ( <div className="relative text-center my-8 w-full max-w-sm mx-auto group"> <img src="images/Robot-Logo-Empty-01.png" alt="Checkpoint Robot" className="w-24 h-24 absolute -top-16 left-1/2 -translate-x-1/2 transition-transform duration-300 group-hover:scale-110"/> <div className="mt-8 text-purple-300 font-bold text-lg py-3 bg-purple-900 bg-opacity-50 rounded-lg border-2 border-purple-500"> <i className="fas fa-flag-checkered mr-2"></i> {text} </div> </div> );
+        
+        // REDESIGNED: Robot component with an always-visible speech bubble
+        const EncouragementRobotNode = ({ side }) => {
+            const messages = ["You're doing great!", "Keep it up!", "Awesome work!"];
+            const [message] = React.useState(messages[Math.floor(Math.random() * messages.length)]);
+            const positionClass = side === 'left' ? 'self-start' : 'self-end';
+
+            return (
+                <div className={`relative flex items-center justify-center my-4 ${positionClass}`} style={{ flexBasis: '50%' }}>
+                     <div className="relative">
+                        <img src="images/Robot-Logo-Empty-01.png" alt="Encouragement Robot" className="w-24 h-24 transition-transform duration-300 hover:scale-110"/>
+                        <div className={`speech-bubble ${side}`}>
+                            {message}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+        
+        const createNodes = (startIndex) => Array.from({ length: 5 }, (_, i) => ({ type: 'lesson', id: `l${startIndex + i}`, title: `Lesson ${startIndex + i}` }));
+        const allCoursesData = { "Neural Networks": { courseTitle: "Neural Networks: From Scratch to Frameworks", sections: [ { id: "nn_s1", unit: "SECTION 1", title: "Foundations of NN", nodes: createNodes(1) }, { id: "nn_s2", unit: "SECTION 2", title: "Convolutional Networks (CNN)", nodes: createNodes(6) }, { id: "nn_s3", unit: "SECTION 3", title: "Recurrent Networks (RNN)", nodes: createNodes(11) }, { id: "nn_s4", unit: "SECTION 4", title: "Advanced Architectures", nodes: createNodes(16) } ] }, "Computer Vision": { courseTitle: "Computer Vision with Python", sections: [ { id: "cv_s1", unit: "SECTION 1", title: "Image Fundamentals", nodes: createNodes(1) }, { id: "cv_s2", unit: "SECTION 2", title: "Feature Detection", nodes: createNodes(6) }, { id: "cv_s3", unit: "SECTION 3", title: "Object Recognition", nodes: createNodes(11) }, { id: "cv_s4", unit: "SECTION 4", title: "Video Analysis", nodes: createNodes(16) } ] }, "Machine Learning": { courseTitle: "The Machine Learning Course", sections: [ { id: "ml_s1", unit: "SECTION 1", title: "Core Concepts", nodes: createNodes(1) }, { id: "ml_s2", unit: "SECTION 2", title: "Supervised Learning", nodes: createNodes(6) }, { id: "ml_s3", unit: "SECTION 3", title: "Unsupervised Learning", nodes: createNodes(11) }, { id: "ml_s4", unit: "SECTION 4", title: "Model Deployment", nodes: createNodes(16) } ] }, "Cloud": { courseTitle: "Cloud Computing Essentials", sections: [ { id: "c_s1", unit: "SECTION 1", title: "Intro to Cloud", nodes: createNodes(1) }, { id: "c_s2", unit: "SECTION 2", title: "IaaS, PaaS, SaaS", nodes: createNodes(6) }, { id: "c_s3", unit: "SECTION 3", title: "Virtualization & Containers", nodes: createNodes(11) }, { id: "c_s4", unit: "SECTION 4", title: "Cloud Security", nodes: createNodes(16) } ] }, "Deep Learning": { courseTitle: "Deep Learning Specialization", sections: [ { id: "dl_s1", unit: "SECTION 1", title: "Hyperparameter Tuning", nodes: createNodes(1) }, { id: "dl_s2", unit: "SECTION 2", title: "Optimization Algorithms", nodes: createNodes(6) }, { id: "dl_s3", unit: "SECTION 3", title: "TensorFlow & PyTorch", nodes: createNodes(11) }, { id: "dl_s4", unit: "SECTION 4", title: "Generative Models", nodes: createNodes(16) } ] }, "NLP": { courseTitle: "Natural Language Processing", sections: [ { id: "nlp_s1", unit: "SECTION 1", title: "Text Processing", nodes: createNodes(1) }, { id: "nlp_s2", unit: "SECTION 2", title: "Embeddings & Semantics", nodes: createNodes(6) }, { id: "nlp_s3", unit: "SECTION 3", title: "Sequence Models", nodes: createNodes(11) }, { id: "nlp_s4", unit: "SECTION 4", title: "Transformers & BERT", nodes: createNodes(16) } ] }, "Robotics": { courseTitle: "Modern Robotics", sections: [ { id: "r_s1", unit: "SECTION 1", title: "Robot Kinematics", nodes: createNodes(1) }, { id: "r_s2", unit: "SECTION 2", title: "Dynamics and Control", nodes: createNodes(6) }, { id: "r_s3", unit: "SECTION 3", title: "Motion Planning", nodes: createNodes(11) }, { id: "r_s4", unit: "SECTION 4", title: "Robot Vision", nodes: createNodes(16) } ] } };
+        
+        const processCourseDataWithEncouragement = (data) => {
+            const processedData = JSON.parse(JSON.stringify(data));
+            for (const courseKey in processedData) {
+                processedData[courseKey].sections.forEach((section, index) => {
+                    if (section.nodes && section.nodes.length > 2) {
+                        // UPDATED: Always place the robot in the center (after the 3rd lesson)
+                        section.nodes.splice(3, 0, { type: 'encouragement', id: `enc_${section.id}` });
+                    }
+                });
+            }
+            return processedData;
+        };
+
+        const HomePage = () => {
+            const [userData, setUserData] = React.useState(null);
+            const [courseData, setCourseData] = React.useState(null);
+
+            React.useEffect(() => {
+                let userObject = null;
+                try {
+                    const storedUserData = localStorage.getItem('Q.Ai_userData');
+                    if (storedUserData) {
+                        const parsedData = JSON.parse(storedUserData);
+                        if (parsedData && parsedData.profile && parsedData.stats && parsedData.progress) {
+                            userObject = parsedData;
+                        }
+                    }
+                } catch (error) {
+                    console.error("Corrupted user data in localStorage. Resetting.", error);
+                    localStorage.removeItem('Q.Ai_userData');
+                }
+                if (!userObject) {
+                    userObject = { profile: { username: "Guest", avatarUrl: "", statusEmoji: '🙂' }, stats: { dayStreak: 0, currentLeague: "Ruby", totalXp: 1076, rank: 4, lives: 5, lastLessonDate: null }, progress: { "Neural Networks": 3, "Computer Vision": 0, "Machine Learning": 0, "Cloud": 0, "Deep Learning": 0, "NLP": 0, "Robotics": 0 }, currentCourse: 'Neural Networks' };
+                    localStorage.setItem('Q.Ai_userData', JSON.stringify(userObject));
+                }
+                setUserData(userObject);
+            }, []); 
+
+            React.useEffect(() => {
+                if (userData) {
+                    const processedData = processCourseDataWithEncouragement(allCoursesData);
+                    const data = processedData[userData.currentCourse] || processedData["Neural Networks"];
+                    setCourseData(data);
+                }
+            }, [userData]);
+
+            const handleCourseChange = (newCourseName) => { setUserData(prevData => { const newProgress = { ...prevData.progress, [newCourseName]: prevData.progress[newCourseName] || 0 }; const updatedData = { ...prevData, currentCourse: newCourseName, progress: newProgress }; localStorage.setItem('Q.Ai_userData', JSON.stringify(updatedData)); return updatedData; }); };
+            
+            if (!userData || !courseData) { return <div className="full-page-bg flex items-center justify-center"> <h1 className="text-white text-2xl">Loading...</h1> </div>; }
+
+            let lessonsCounter = 0;
+            const lessonsCompleted = userData.progress[userData.currentCourse] || 0;
+
+            return (
+                <div className="full-page-bg flex">
+                    <Sidebar />
+                    <TopHeader dayStreak={userData.stats.dayStreak} lives={userData.stats.lives} currentCourse={userData.currentCourse} onCourseChange={handleCourseChange} />
+                    <main className="w-full" style={{ marginLeft: '200px', paddingTop: '60px' }}>
+                        <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row gap-8 px-4 py-8">
+                            <div className="flex-grow">
+                                <h1 className="text-4xl font-bold text-center text-white mb-4">{courseData.courseTitle}</h1>
+                                <p className="text-center text-gray-300 mb-8">Your learning path for the <span className="font-bold text-purple-400">{userData.currentCourse}</span> course.</p>
+                                {courseData.sections.map((section, sectionIndex) => (
+                                    <div key={section.unit || section.id}>
+                                        <SectionHeader unit={section.unit} title={section.title} sectionId={section.id} />
+                                        <div className="relative flex flex-col items-center" style={{paddingTop: '3rem'}}>
+                                            <div className="absolute top-0 bottom-0 w-3 bg-gray-800 rounded-full" style={{left: 'calc(50% - 6px)', zIndex: -1}}></div>
+                                            <div className="w-full flex flex-col items-center space-y-12">
+                                                {section.nodes.map((node, index) => {
+                                                    if (node.type === 'encouragement') {
+                                                        const side = ((lessonsCounter + index) % 2 !== 0) ? 'left' : 'right';
+                                                        return <EncouragementRobotNode key={node.id} side={side} />;
+                                                    }
+                                                    
+                                                    const nodeGlobalIndex = lessonsCounter;
+                                                    lessonsCounter++;
+                                                    let status = 'locked';
+                                                    if (nodeGlobalIndex < lessonsCompleted) { status = 'completed'; }
+                                                    else if (nodeGlobalIndex === lessonsCompleted) { status = 'unlocked'; }
+                                                    const side = (lessonsCounter % 2 !== 0) ? 'left' : 'right';
+
+                                                    return <PathNode key={node.id} {...node} status={status} side={side} lessonId={node.id} />;
+                                                })}
+                                                <CheckpointNode text={`Checkpoint ${sectionIndex + 1}`} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="w-full lg:w-80 flex-shrink-0 space-y-6 lg:sticky lg:top-24 self-start">
+                                <LeaderboardPreviewPanel league={userData.stats.currentLeague} rank={userData.stats.rank} xp={userData.stats.totalXp} />
+                                <StatusPanel avatar={userData.profile.avatarUrl} statusEmoji={userData.profile.statusEmoji} />
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            );
+        };
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<HomePage />);
+    </script>
+</body>
+</html>
