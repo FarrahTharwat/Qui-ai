@@ -1,5 +1,6 @@
-# Fixed main.py
+# Updated main.py with CORS
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from routes import router
 from database import initialize_db, test_connections
 import asyncio
@@ -13,6 +14,15 @@ app = FastAPI(
     title="Leaderboard Service",
     version="0.2.0",
     description="Leaderboard service using Supabase and Redis"
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify your frontend domain
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 

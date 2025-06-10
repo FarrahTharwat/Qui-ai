@@ -1,3 +1,4 @@
+# Fixed celery.py
 import os
 from celery import Celery
 from dotenv import load_dotenv
@@ -54,5 +55,5 @@ celery_app.conf.update(
 @celery_app.task
 def test_task():
     """Test task to verify Celery is working"""
-    print("Celery is working with Supabase!")
+    print("Celery is working!")
     return "Success"

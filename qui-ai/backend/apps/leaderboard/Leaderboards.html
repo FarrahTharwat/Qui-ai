@@ -15,7 +15,6 @@
         @font-face { font-family: 'Madani'; src: url('./Fonts/Madani Arabic Bold.ttf') format('truetype'); font-weight: bold; }
         body { font-family: 'Madani', sans-serif; background-color: black; overflow-x: hidden; }
         input, button, p, h1, h2, span, a, svg, div { font-family: 'Madani', sans-serif; }
-        /* CORRECTED FONT-AWESOME STYLE */
         .fas, .fab { height: 1.25rem; width: 1.25rem; display: flex; align-items: center; justify-content: center; line-height: 1 !important; transition: color 0.2s ease-in-out; color: white; }
         .full-page-bg { min-height: 100vh; background-color: black; background-image: radial-gradient(at bottom right, #c74ece 0%, #3c0089 50%, transparent 70%); background-size: 200% 200%; background-position: 0% 0%; animation: moveGradient 15s ease infinite alternate; position: relative; overflow: hidden; }
         @keyframes moveGradient { 0% { background-position: 0% 0%; } 25% { background-position: 100% 0%; } 50% { background-position: 100% 100%; } 75% { background-position: 0% 100%; } 100% { background-position: 0% 0%; } }
@@ -34,79 +33,344 @@
         .dropdown-item:hover { background-color: #2a2a2a; }
         .dropdown-item i { margin-right: 0.75rem; }
         .dropdown-item.active-course { background-color: #c74ece; }
+        .loading-spinner { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
     <div id="root"></div>
     <script type="text/babel">
-        const Sidebar = () => { const handleLogout = (e) => { e.preventDefault(); localStorage.removeItem('Q.Ai_userData'); window.location.href = 'Login.html'; }; const sidebarItems = [{ icon: 'fa-graduation-cap', text: 'LEARN', link: 'HomePage.html', active: false }, { icon: 'fa-upload', text: 'USER UPLOADS', link: '#', active: false }, { icon: 'fa-trophy', text: 'LEADERBOARDS', link: 'Leaderboards.html', active: true }, { icon: 'fa-user', text: 'PROFILE', link: 'MyProfile.html', active: false },]; return (<div className="sidebar"> <a href="HomePage.html" className="sidebar-logo">QUI.AI</a> <div> {sidebarItems.map(item => (<a key={item.text} href={item.link} className={`sidebar-item ${item.active ? 'active' : ''}`}> <i className={`fas ${item.icon} mr-3 text-white`}></i> <span className="text-lg font-semibold">{item.text}</span> </a>))} </div> <div className="relative group mt-auto mb-2"> <div className="sidebar-item"> <i className="fas fa-ellipsis-h mr-3 text-white"></i> <span className="text-lg font-semibold">MORE</span> </div> <div className="absolute bottom-full left-0 mb-2 w-[190px] bg-[#2a2a2a] rounded-lg shadow-lg hidden group-hover:block transition-all duration-300 opacity-0 group-hover:opacity-100"> <button onClick={handleLogout} className="w-full text-left flex items-center text-white px-4 py-3 hover:bg-red-600 rounded-lg"> <i className="fas fa-sign-out-alt mr-3 text-white"></i> Log Out </button> </div> </div> </div>); };
-        const TopHeader = ({ dayStreak, lives, currentCourse, onCourseChange }) => { const courses = [{ id: 1, name: "Computer Vision", icon: "fa-eye" }, { id: 2, name: "Cloud", icon: "fa-cloud" }, { id: 3, name: "Deep Learning", icon: "fa-layer-group" }, { id: 4, name: "Machine Learning", icon: "fa-cogs" }, { id: 5, name: "NLP", icon: "fa-comment-dots" }, { id: 6, name: "Neural Networks", icon: "fa-brain" }, { id: 7, name: "Robotics", icon: "fa-robot" },]; return (<div className="top-header"> <div className="header-item"> <i className="fas fa-fire text-orange-400"></i> <span>{dayStreak}</span> </div> <div className="header-item"> <i className="fas fa-heart text-red-500"></i> <span>{lives}</span> </div> <div className="header-item group"> <i className="fas fa-flag text-white"></i> <span>{currentCourse}</span> <div className="dropdown-content group-hover:flex"> {courses.map(course => (<div key={course.id} onClick={() => onCourseChange(course.name)} className={`dropdown-item ${course.name === currentCourse ? 'active-course' : ''}`}> <i className={`fas ${course.icon} text-white`}></i> {course.name} </div>))} </div> </div> <div className="header-item"> <i className="fas fa-bell text-white"></i> </div> </div>); };
-        const LeaderboardRow = ({ rank, avatar, username, xp, isCurrentUser, statusEmoji }) => (<div className={`flex items-center p-3 rounded-lg transition-colors ${isCurrentUser ? 'bg-[#c74ece]' : 'hover:bg-gray-800'}`}> <div className="w-8 text-center font-bold text-lg text-white">{rank}</div> <div className="relative w-12 h-12 mx-4 flex-shrink-0"> <div className="w-full h-full rounded-full overflow-hidden"> {(isCurrentUser && avatar) || (!isCurrentUser && avatar) ? <img src={avatar} alt={`${username}'s avatar`} className="w-full h-full object-cover" /> : isCurrentUser ? <img src={'images/Fouad-01.png'} alt="Your Avatar" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gray-600 flex items-center justify-center"><i className="fas fa-user text-2xl text-gray-400"></i></div>} </div> {isCurrentUser && <div className="absolute -top-1 -right-1 text-xl bg-[#1c1c1c] rounded-full p-0.5">{statusEmoji}</div>} </div> <div className="flex-grow font-semibold text-white">{username}</div> <div className="text-gray-300 font-bold">{xp} XP</div> </div>);
-        const EmojiPickerModal = ({ isOpen, onClose, onEmojiSelect }) => { if (!isOpen) return null; const emojis = ['🙂', '👍', '🔥', '🚀', '💡', '🧠', '💻', '🤓', '🏆', '💯', '🤯', '😎']; return (<div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" onClick={onClose}> <div className="bg-[#1c1c1c] rounded-2xl p-6" onClick={e => e.stopPropagation()}> <h3 className="text-white font-bold text-center mb-4">Select a Status</h3> <div className="grid grid-cols-4 gap-4"> {emojis.map(emoji => (<button key={emoji} onClick={() => onEmojiSelect(emoji)} className="text-3xl p-2 rounded-lg hover:bg-gray-700 transition-colors">{emoji}</button>))} </div> </div> </div>); };
-        const StatusPanel = ({ avatar, statusEmoji, onEmojiPickerOpen }) => (<div className="bg-[#1c1c1c] rounded-xl p-4 text-center"> <div className="relative w-24 h-24 rounded-full mx-auto mb-3 cursor-pointer" onClick={onEmojiPickerOpen}> <img src={avatar || 'images/Fouad-01.png'} alt="Your avatar" className="w-full h-full object-cover rounded-full" /> <div className="absolute -top-2 -right-2 text-4xl bg-[#1c1c1c] rounded-full p-1">{statusEmoji}</div> </div> <h3 className="font-bold text-white">Set your status</h3> <p className="text-sm text-gray-400">Let others know how you're doing</p> </div>);
-        const LeaguesBar = ({ currentLeagueName }) => { const leagues = [{ name: 'Bronze', color: 'text-orange-400' }, { name: 'Silver', color: 'text-slate-400' }, { name: 'Gold', color: 'text-yellow-400' }, { name: 'Ruby', color: 'text-red-500' }, { name: 'Diamond', color: 'text-cyan-400' },]; return (<div className="flex justify-center items-end gap-3 mb-4 cursor-pointer"> {leagues.map(league => (<div key={league.name} className={`flex flex-col items-center transition-all duration-300 ${currentLeagueName === league.name ? 'scale-125' : 'opacity-50 hover:opacity-100'}`}> <i className={`fas fa-gem text-4xl ${league.color}`}></i> <span className={`text-xs font-bold mt-1 ${currentLeagueName === league.name ? 'text-white' : 'text-gray-500'}`}>{league.name}</span> </div>))} </div>); };
+        // API Configuration
+        const API_BASE_URL = 'http://localhost:8000/api'; // Change this to your actual API URL
+
+        // API Service
+        const apiService = {
+            async getTopPlayers(courseId, count = 10) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/top/${courseId}/${count}`);
+                    if (!response.ok) throw new Error('Failed to fetch leaderboard');
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error fetching top players:', error);
+                    return [];
+                }
+            },
+
+            async getUserRank(courseId, username) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/rank/${courseId}/${username}`);
+                    if (!response.ok) throw new Error('User not found');
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error fetching user rank:', error);
+                    return null;
+                }
+            },
+
+            async submitScore(courseId, username, score) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/submit_score/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ course_id: courseId, username, score })
+                    });
+                    if (!response.ok) throw new Error('Failed to submit score');
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error submitting score:', error);
+                    throw error;
+                }
+            }
+        };
+
+        const Sidebar = () => {
+            const handleLogout = (e) => {
+                e.preventDefault();
+                localStorage.removeItem('Q.Ai_userData');
+                window.location.href = 'Login.html';
+            };
+            const sidebarItems = [
+                { icon: 'fa-graduation-cap', text: 'LEARN', link: 'HomePage.html', active: false },
+                { icon: 'fa-upload', text: 'USER UPLOADS', link: '#', active: false },
+                { icon: 'fa-trophy', text: 'LEADERBOARDS', link: 'Leaderboards.html', active: true },
+                { icon: 'fa-user', text: 'PROFILE', link: 'MyProfile.html', active: false }
+            ];
+            return (
+                <div className="sidebar">
+                    <a href="HomePage.html" className="sidebar-logo">QUI.AI</a>
+                    <div>
+                        {sidebarItems.map(item => (
+                            <a key={item.text} href={item.link} className={`sidebar-item ${item.active ? 'active' : ''}`}>
+                                <i className={`fas ${item.icon} mr-3 text-white`}></i>
+                                <span className="text-lg font-semibold">{item.text}</span>
+                            </a>
+                        ))}
+                    </div>
+                    <div className="relative group mt-auto mb-2">
+                        <div className="sidebar-item">
+                            <i className="fas fa-ellipsis-h mr-3 text-white"></i>
+                            <span className="text-lg font-semibold">MORE</span>
+                        </div>
+                        <div className="absolute bottom-full left-0 mb-2 w-[190px] bg-[#2a2a2a] rounded-lg shadow-lg hidden group-hover:block transition-all duration-300 opacity-0 group-hover:opacity-100">
+                            <button onClick={handleLogout} className="w-full text-left flex items-center text-white px-4 py-3 hover:bg-red-600 rounded-lg">
+                                <i className="fas fa-sign-out-alt mr-3 text-white"></i> Log Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const TopHeader = ({ dayStreak, lives, currentCourse, onCourseChange }) => {
+            const courses = [
+                { id: "cv", name: "Computer Vision", icon: "fa-eye" },
+                { id: "cloud", name: "Cloud", icon: "fa-cloud" },
+                { id: "dl", name: "Deep Learning", icon: "fa-layer-group" },
+                { id: "ml", name: "Machine Learning", icon: "fa-cogs" },
+                { id: "nlp", name: "NLP", icon: "fa-comment-dots" },
+                { id: "nn", name: "Neural Networks", icon: "fa-brain" },
+                { id: "robotics", name: "Robotics", icon: "fa-robot" }
+            ];
+            return (
+                <div className="top-header">
+                    <div className="header-item">
+                        <i className="fas fa-fire text-orange-400"></i>
+                        <span>{dayStreak}</span>
+                    </div>
+                    <div className="header-item">
+                        <i className="fas fa-heart text-red-500"></i>
+                        <span>{lives}</span>
+                    </div>
+                    <div className="header-item group">
+                        <i className="fas fa-flag text-white"></i>
+                        <span>{currentCourse}</span>
+                        <div className="dropdown-content group-hover:flex">
+                            {courses.map(course => (
+                                <div key={course.id} onClick={() => onCourseChange(course)} className={`dropdown-item ${course.name === currentCourse ? 'active-course' : ''}`}>
+                                    <i className={`fas ${course.icon} text-white`}></i>
+                                    {course.name}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="header-item">
+                        <i className="fas fa-bell text-white"></i>
+                    </div>
+                </div>
+            );
+        };
+
+        const LeaderboardRow = ({ rank, avatar, username, score, isCurrentUser, statusEmoji }) => (
+            <div className={`flex items-center p-3 rounded-lg transition-colors ${isCurrentUser ? 'bg-[#c74ece]' : 'hover:bg-gray-800'}`}>
+                <div className="w-8 text-center font-bold text-lg text-white">{rank}</div>
+                <div className="relative w-12 h-12 mx-4 flex-shrink-0">
+                    <div className="w-full h-full rounded-full overflow-hidden">
+                        {(isCurrentUser && avatar) || (!isCurrentUser && avatar) ?
+                            <img src={avatar} alt={`${username}'s avatar`} className="w-full h-full object-cover" /> :
+                            isCurrentUser ?
+                                <img src={'images/Fouad-01.png'} alt="Your Avatar" className="w-full h-full object-cover" /> :
+                                <div className="w-full h-full bg-gray-600 flex items-center justify-center">
+                                    <i className="fas fa-user text-2xl text-gray-400"></i>
+                                </div>
+                        }
+                    </div>
+                    {isCurrentUser && <div className="absolute -top-1 -right-1 text-xl bg-[#1c1c1c] rounded-full p-0.5">{statusEmoji}</div>}
+                </div>
+                <div className="flex-grow font-semibold text-white">{username}</div>
+                <div className="text-gray-300 font-bold">{score} XP</div>
+            </div>
+        );
+
+        const EmojiPickerModal = ({ isOpen, onClose, onEmojiSelect }) => {
+            if (!isOpen) return null;
+            const emojis = ['🙂', '👍', '🔥', '🚀', '💡', '🧠', '💻', '🤓', '🏆', '💯', '🤯', '😎'];
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" onClick={onClose}>
+                    <div className="bg-[#1c1c1c] rounded-2xl p-6" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-white font-bold text-center mb-4">Select a Status</h3>
+                        <div className="grid grid-cols-4 gap-4">
+                            {emojis.map(emoji => (
+                                <button key={emoji} onClick={() => onEmojiSelect(emoji)} className="text-3xl p-2 rounded-lg hover:bg-gray-700 transition-colors">
+                                    {emoji}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const StatusPanel = ({ avatar, statusEmoji, onEmojiPickerOpen }) => (
+            <div className="bg-[#1c1c1c] rounded-xl p-4 text-center">
+                <div className="relative w-24 h-24 rounded-full mx-auto mb-3 cursor-pointer" onClick={onEmojiPickerOpen}>
+                    <img src={avatar || 'images/Fouad-01.png'} alt="Your avatar" className="w-full h-full object-cover rounded-full" />
+                    <div className="absolute -top-2 -right-2 text-4xl bg-[#1c1c1c] rounded-full p-1">{statusEmoji}</div>
+                </div>
+                <h3 className="font-bold text-white">Set your status</h3>
+                <p className="text-sm text-gray-400">Let others know how you're doing</p>
+            </div>
+        );
 
         const LeaderboardPage = () => {
             const [userData, setUserData] = React.useState(null);
-            const [leagueData, setLeagueData] = React.useState(null);
+            const [leaderboardData, setLeaderboardData] = React.useState([]);
+            const [userRank, setUserRank] = React.useState(null);
             const [isEmojiPickerOpen, setEmojiPickerOpen] = React.useState(false);
+            const [loading, setLoading] = React.useState(true);
+            const [error, setError] = React.useState(null);
+            const [currentCourseId, setCurrentCourseId] = React.useState('cv');
+
             React.useEffect(() => {
+                // Load user data
                 let userObject = null;
-                try { const storedUserData = localStorage.getItem('Q.Ai_userData'); if (storedUserData) { userObject = JSON.parse(storedUserData); } } catch (error) { console.error("Failed to load user data:", error); }
-                if (!userObject) { userObject = { profile: { username: "Guest", avatarUrl: "", statusEmoji: '🙂' }, stats: { dayStreak: 0, lives: 5, currentLeague: "Ruby" }, currentCourse: 'N/A' }; }
-                if (!userObject.profile.statusEmoji) { userObject.profile.statusEmoji = '🙂'; }
+                try {
+                    const storedUserData = localStorage.getItem('Q.Ai_userData');
+                    if (storedUserData) {
+                        userObject = JSON.parse(storedUserData);
+                    }
+                } catch (error) {
+                    console.error("Failed to load user data:", error);
+                }
+
+                if (!userObject) {
+                    userObject = {
+                        profile: { username: "Guest", avatarUrl: "", statusEmoji: '🙂' },
+                        stats: { dayStreak: 0, lives: 5 },
+                        currentCourse: 'Computer Vision'
+                    };
+                }
+
+                if (!userObject.profile.statusEmoji) {
+                    userObject.profile.statusEmoji = '🙂';
+                }
+
                 setUserData(userObject);
-                const mockApiData = { leagueName: "Ruby", timeLeft: "6D 14H", promotionRankThreshold: 3, demotionRankThreshold: 5, users: [{ rank: 1, id: 'user01', username: 'Ahmed Gamal', xp: 4520, avatarUrl: null }, { rank: 2, id: 'user02', username: 'Salma Ibrahim', xp: 4310, avatarUrl: null }, { rank: 3, id: 'user03', username: 'Youssef Ali', xp: 3980, avatarUrl: null }, { rank: 4, id: 'user04', username: userObject.profile.username, xp: 1076, avatarUrl: userObject.profile.avatarUrl }, { rank: 5, id: 'user05', username: 'Hassan Mohamed', xp: 210, avatarUrl: null }, { rank: 6, id: 'user06', username: 'Farah Hossam', xp: 150, avatarUrl: null }].sort((a, b) => a.xp - b.xp).reverse().map((u, i) => ({ ...u, rank: i + 1 })) };
-                setLeagueData(mockApiData);
-            }, []);
-            const handleCourseChange = (newCourseName) => { setUserData(prevData => { const updatedData = { ...prevData, currentCourse: newCourseName }; localStorage.setItem('Q.Ai_userData', JSON.stringify(updatedData)); return updatedData; }); };
-            const handleEmojiSelect = (emoji) => { const updatedUserData = { ...userData, profile: { ...userData.profile, statusEmoji: emoji } }; setUserData(updatedUserData); localStorage.setItem('Q.Ai_userData', JSON.stringify(updatedUserData)); setEmojiPickerOpen(false); };
+
+                // Load leaderboard data
+                loadLeaderboardData(currentCourseId, userObject.profile.username);
+            }, [currentCourseId]);
+
+            const loadLeaderboardData = async (courseId, username) => {
+                setLoading(true);
+                setError(null);
+
+                try {
+                    const [topPlayers, userRankData] = await Promise.all([
+                        apiService.getTopPlayers(courseId, 10),
+                        apiService.getUserRank(courseId, username)
+                    ]);
+
+                    setLeaderboardData(topPlayers);
+                    setUserRank(userRankData);
+                } catch (err) {
+                    setError('Failed to load leaderboard data');
+                    console.error('Error loading leaderboard:', err);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleCourseChange = (course) => {
+                setCurrentCourseId(course.id);
+                setUserData(prevData => {
+                    const updatedData = { ...prevData, currentCourse: course.name };
+                    localStorage.setItem('Q.Ai_userData', JSON.stringify(updatedData));
+                    return updatedData;
+                });
+            };
+
+            const handleEmojiSelect = (emoji) => {
+                const updatedUserData = { ...userData, profile: { ...userData.profile, statusEmoji: emoji } };
+                setUserData(updatedUserData);
+                localStorage.setItem('Q.Ai_userData', JSON.stringify(updatedUserData));
+                setEmojiPickerOpen(false);
+            };
+
             const sidebarWidth = '200px';
-            if (!userData || !leagueData) { return <div className="full-page-bg flex items-center justify-center"> <h1 className="text-white text-2xl">Loading...</h1> </div>; }
-            const promotionZoneUsers = leagueData.users.filter(u => u.rank <= leagueData.promotionRankThreshold);
-            const safeZoneUsers = leagueData.users.filter(u => u.rank > leagueData.promotionRankThreshold && u.rank < leagueData.demotionRankThreshold);
-            const demotionZoneUsers = leagueData.users.filter(u => u.rank >= leagueData.demotionRankThreshold);
-            const isFinalLeague = leagueData.leagueName === "Diamond";
+
+            if (!userData) {
+                return (
+                    <div className="full-page-bg flex items-center justify-center">
+                        <h1 className="text-white text-2xl">Loading...</h1>
+                    </div>
+                );
+            }
 
             return (
                 <div className="full-page-bg flex">
                     <Sidebar />
-                    <TopHeader dayStreak={userData.stats.dayStreak} lives={userData.stats.lives} currentCourse={userData.currentCourse} onCourseChange={handleCourseChange} />
+                    <TopHeader
+                        dayStreak={userData.stats.dayStreak}
+                        lives={userData.stats.lives}
+                        currentCourse={userData.currentCourse}
+                        onCourseChange={handleCourseChange}
+                    />
                     <main className="w-full flex justify-center py-8" style={{ marginLeft: sidebarWidth, marginTop: '60px' }}>
                         <div className="w-full max-w-6xl mx-auto flex flex-col lg:flex-row gap-8 px-4">
                             <div className="flex-grow">
                                 <div className="text-center mb-6">
-                                    <LeaguesBar currentLeagueName={leagueData.leagueName} />
-                                    <h1 className="text-3xl font-bold text-white mt-4">{leagueData.leagueName} League</h1>
-                                    <p className="text-gray-400">Time Left: {leagueData.timeLeft}</p>
-                                </div>
-                                <div className="bg-[#1c1c1c] rounded-xl p-2 space-y-1">
-                                    {promotionZoneUsers.map(user => <LeaderboardRow key={user.id} {...user} isCurrentUser={user.username === userData.profile.username} statusEmoji={userData.profile.statusEmoji} />)}
-                                    {!isFinalLeague && (
-                                        <div className="relative text-center my-2 py-2 border-t-2 border-b-2 border-dashed border-purple-500">
-                                            <span className="absolute top-1/2 left-0 -translate-y-1/2 bg-purple-500 p-1 rounded-full"><i className="fas fa-arrow-up text-white"></i></span>
-                                            <span className="text-purple-400 font-bold">PROMOTION ZONE</span>
-                                        </div>
+                                    <h1 className="text-3xl font-bold text-white mt-4">{userData.currentCourse} Leaderboard</h1>
+                                    {userRank && (
+                                        <p className="text-gray-400">Your Rank: #{userRank.rank} with {userRank.score} XP</p>
                                     )}
-                                    {safeZoneUsers.map(user => <LeaderboardRow key={user.id} {...user} isCurrentUser={user.username === userData.profile.username} statusEmoji={userData.profile.statusEmoji} />)}
-                                    {demotionZoneUsers.length > 0 && (
-                                        <div className="relative text-center my-2 py-2 border-t-2 border-b-2 border-dashed border-gray-600">
-                                            <span className="absolute top-1/2 left-0 -translate-y-1/2 bg-gray-600 p-1 rounded-full"><i className="fas fa-arrow-down text-white"></i></span>
-                                            <span className="text-gray-500 font-bold">DEMOTION ZONE</span>
-                                        </div>
-                                    )}
-                                    {demotionZoneUsers.map(user => <LeaderboardRow key={user.id} {...user} isCurrentUser={user.username === userData.profile.username} statusEmoji={userData.profile.statusEmoji} />)}
                                 </div>
+
+                                {loading ? (
+                                    <div className="bg-[#1c1c1c] rounded-xl p-8 text-center">
+                                        <i className="fas fa-spinner loading-spinner text-white text-3xl mb-4"></i>
+                                        <p className="text-white">Loading leaderboard...</p>
+                                    </div>
+                                ) : error ? (
+                                    <div className="bg-[#1c1c1c] rounded-xl p-8 text-center">
+                                        <i className="fas fa-exclamation-triangle text-red-500 text-3xl mb-4"></i>
+                                        <p className="text-white">{error}</p>
+                                        <button
+                                            onClick={() => loadLeaderboardData(currentCourseId, userData.profile.username)}
+                                            className="mt-4 bg-[#c74ece] text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors"
+                                        >
+                                            Retry
+                                        </button>
+                                    </div>
+                                ) : leaderboardData.length === 0 ? (
+                                    <div className="bg-[#1c1c1c] rounded-xl p-8 text-center">
+                                        <i className="fas fa-trophy text-gray-500 text-3xl mb-4"></i>
+                                        <p className="text-white">No players found for this course</p>
+                                        <p className="text-gray-400 text-sm mt-2">Be the first to submit a score!</p>
+                                    </div>
+                                ) : (
+                                    <div className="bg-[#1c1c1c] rounded-xl p-2 space-y-1">
+                                        {leaderboardData.map(player => (
+                                            <LeaderboardRow
+                                                key={`${player.username}-${player.rank}`}
+                                                rank={player.rank}
+                                                username={player.username}
+                                                score={player.score}
+                                                isCurrentUser={player.username === userData.profile.username}
+                                                statusEmoji={userData.profile.statusEmoji}
+                                                avatar={player.username === userData.profile.username ? userData.profile.avatarUrl : null}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                             <div className="w-full lg:w-80 flex-shrink-0">
-                                <StatusPanel avatar={userData.profile.avatarUrl} statusEmoji={userData.profile.statusEmoji} onEmojiPickerOpen={() => setEmojiPickerOpen(true)} />
+                                <StatusPanel
+                                    avatar={userData.profile.avatarUrl}
+                                    statusEmoji={userData.profile.statusEmoji}
+                                    onEmojiPickerOpen={() => setEmojiPickerOpen(true)}
+                                />
                             </div>
                         </div>
                     </main>
-                    <EmojiPickerModal isOpen={isEmojiPickerOpen} onClose={() => setEmojiPickerOpen(false)} onEmojiSelect={handleEmojiSelect} />
+                    <EmojiPickerModal
+                        isOpen={isEmojiPickerOpen}
+                        onClose={() => setEmojiPickerOpen(false)}
+                        onEmojiSelect={handleEmojiSelect}
+                    />
                 </div>
             );
         };
+
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<LeaderboardPage />);
     </script>
