@@ -1,0 +1,25 @@
+{
+    "session_id": "1509e59f-f0b8-4995-9272-8ecd28bb239c",
+    "cleaned_text": "Test Document for API Testing\n\nThis is a test PDF document created for API testing purposes.\n\nContent includes:\n\n• Multiple paragraphs of text\n\n• Different formatting styles\n\n• Sample data for document processing\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit.\n\nSed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n\nUt enim ad minim veniam, quis nostrud exercitation ullamco.\n\nThis document can be used to test:\n\n1. PDF upload functionality\n\n2. Text extraction capabilities\n\n3. Document processing workflows\n\n4. API response handling\n\nEnd of test document.",
+    "polished_text": "API Test Document for API Testing. This is a test PDF document created for testing purposes. Content includes: • Multiple paragraphs of text:• Different formatting styles for different types of text.• Sample data for document processing.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco. This document can be used to test:1. PDF upload functionality.2. Text extraction capabilities in Python 3.3. Document processing workflows in Python 4.4. API response handling: End-End of test document.\n\n",
+    "polished_pages": {
+        "page_1": "API Test Document for API Testing. This is a test PDF document created for testing purposes. Content includes: • Multiple paragraphs of text:• Different formatting styles for different types of text.• Sample data for document processing.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco. This document can be used to test:1. PDF upload functionality.2. Text extraction capabilities in Python 3.3. Document processing workflows in Python 4.4. API response handling: End-End of test document."
+    },
+    "pdf_path": "processed/1509e59f-f0b8-4995-9272-8ecd28bb239c/cleaned_20250609_075935.pdf",
+    "timestamp": "2025-06-09T07:59:35.955064",
+    "metadata": {
+        "format": "PDF 1.3",
+        "title": "untitled",
+        "author": "anonymous",
+        "subject": "unspecified",
+        "keywords": "",
+        "creator": "ReportLab PDF Library - www.reportlab.com",
+        "producer": "ReportLab PDF Library - www.reportlab.com",
+        "creationDate": "D:20250609043619+03'00'",
+        "modDate": "D:20250609043619+03'00'",
+        "trapped": "",
+        "encryption": null,
+        "page_count": 1
+    },
+    "image_analysis": {}
+}

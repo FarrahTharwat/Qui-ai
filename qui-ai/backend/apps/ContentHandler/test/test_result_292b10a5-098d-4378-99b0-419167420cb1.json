@@ -1,0 +1,9 @@
+{
+  "id": "9131f914-5da6-4013-b53e-4f16054b4028",
+  "session_id": "292b10a5-098d-4378-99b0-419167420cb1",
+  "pdf_path": "processed/292b10a5-098d-4378-99b0-419167420cb1/cleaned_20250609_075708.pdf",
+  "original_cleaned_text": "Test Document for API Testing\n\nThis is a test PDF document created for API testing purposes.\n\nContent includes:\n\n\u2022 Multiple paragraphs of text\n\n\u2022 Different formatting styles\n\n\u2022 Sample data for document processing\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit.\n\nSed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n\nUt enim ad minim veniam, quis nostrud exercitation ullamco.\n\nThis document can be used to test:\n\n1. PDF upload functionality\n\n2. Text extraction capabilities\n\n3. Document processing workflows\n\n4. API response handling\n\nEnd of test document.",
+  "combined_summary": "This is a test PDF document created for API testing purposes. This document can be used to test: 1. PDF upload functionality 2. Text extraction capabilities 3. Document processing workflows 4. API response handling.",
+  "created_at": "2025-06-09T04:57:54.60297+00:00",
+  "updated_at": "2025-06-09T04:57:54.60297+00:00"
+}

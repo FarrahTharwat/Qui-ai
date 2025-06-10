@@ -1,3 +1,4 @@
+# Fixed main.py
 from fastapi import FastAPI, HTTPException
 from routes import router
 from database import initialize_db, test_connections
