@@ -1,5 +1,5 @@
 # main.py
-"""FastAPI main application with document processing endpoints"""
+"""FastAPI main application with document processing and MCQ generation endpoints"""
 
 import os
 import logging
@@ -11,8 +11,13 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
 
-# Import the upload router
+# Import routers
 from app.routes.upload import router as upload_router
+from app.routes.mcq import router as mcq_router
+
+# Import MCQ service for model loading
+from app.services.mcq_service import mcq_service
+from app.core.mcq_generator import load_models
 
 # Configure logging
 logging.basicConfig(
@@ -37,6 +42,15 @@ async def lifespan(app: FastAPI):
     os.makedirs("processed", exist_ok=True)
     os.makedirs("static/images", exist_ok=True)
 
+    # Load MCQ models at startup
+    try:
+        logger.info("Loading MCQ generation models...")
+        load_models()
+        logger.info("MCQ models loaded successfully!")
+    except Exception as e:
+        logger.error(f"Failed to load MCQ models: {e}")
+        logger.warning("MCQ generation will not be available")
+
     logger.info("Application startup complete")
 
     yield
@@ -47,8 +61,8 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI app
 app = FastAPI(
-    title="Document Processing API",
-    description="API for PDF document processing with cleaning, summarization, and storage",
+    title="Document Processing & MCQ Generation API",
+    description="API for PDF document processing with cleaning, summarization, storage, and MCQ generation using T5 + RoBERTa",
     version="1.0.0",
     lifespan=lifespan
 )
@@ -70,6 +84,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(upload_router)
+app.include_router(mcq_router)
 
 
 @app.exception_handler(Exception)
@@ -90,16 +105,70 @@ async def global_exception_handler(request: Request, exc: Exception):
 async def root():
     """Root endpoint"""
     return {
-        "message": "Document Processing API",
+        "message": "Document Processing & MCQ Generation API",
         "version": "1.0.0",
+        "description": "Advanced API for document processing and MCQ generation using T5 + RoBERTa models",
         "endpoints": {
-            "upload": "/api/v1/upload",
-            "status": "/api/v1/status/{session_id}",
-            "document": "/api/v1/document/{session_id}",
-            "documents": "/api/v1/documents",
-            "health": "/api/v1/health"
-        }
+            "document_processing": {
+                "upload": "/api/v1/upload",
+                "status": "/api/v1/status/{session_id}",
+                "document": "/api/v1/document/{session_id}",
+                "documents": "/api/v1/documents",
+                "health": "/api/v1/health"
+            },
+            "mcq_generation": {
+                "generate": "/api/v1/mcq/generate/{document_id}",
+                "status": "/api/v1/mcq/status/{session_id}",
+                "list": "/api/v1/mcq/document/{document_id}",
+                "get": "/api/v1/mcq/{mcq_id}",
+                "update": "/api/v1/mcq/{mcq_id}",
+                "delete": "/api/v1/mcq/{mcq_id}",
+                "bulk_delete": "/api/v1/mcq/document/{document_id}"
+            }
+        },
+        "features": [
+            "PDF document processing and cleaning",
+            "Text summarization",
+            "Supabase storage integration",
+            "T5-based question generation",
+            "RoBERTa-based answer extraction",
+            "Quality MCQ generation with distractors",
+            "Difficulty assessment",
+            "Confidence scoring"
+        ]
     }
+
+
+@app.get("/api/v1/health")
+async def health_check():
+    """Health check endpoint"""
+    try:
+        # Check if MCQ models are loaded
+        from app.core.mcq_generator import _models_loaded
+        
+        return {
+            "status": "healthy",
+            "timestamp": "2024-01-01T00:00:00Z",  # Will be replaced with actual timestamp
+            "services": {
+                "api": "running",
+                "mcq_models": "loaded" if _models_loaded else "not_loaded",
+                "database": "connected"  # Could add actual DB health check
+            },
+            "version": "1.0.0"
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "unhealthy",
+                "error": str(e),
+                "services": {
+                    "api": "running",
+                    "mcq_models": "error",
+                    "database": "unknown"
+                }
+            }
+        )
 
 
 if __name__ == "__main__":
