@@ -24,6 +24,8 @@ from .views import (
     accept_friend_request,
     reject_friend_request,
     custom_logout,
+    terms_view,
+    privacy_view,
 )
 # from . import views
 
@@ -33,14 +35,22 @@ urlpatterns = [
     path('', home_view, name='home'),
     path("accounts/signup/", authView, name="authView"),  # Changed from "signup/" to "accounts/signup/"
     path("accounts/", include("django.contrib.auth.urls")),
+    path('accounts/login/Terms', terms_view, name='Terms'),
+    path('accounts/login/Privacy', privacy_view, name='Privacy'),
+    path('accounts/signup/Terms', terms_view, name='Terms'),
+    path('accounts/signup/Privacy', privacy_view, name='Privacy'),
     # path("accounts/logout/", LogoutView.as_view(next_page='home'), name="logout"),
     path('accounts/logout/', custom_logout, name='logout'),
     path('profile/', update_profile, name='profile'),
+    # urls.py
+    path('user_profile.html', view_user_profile, name='user_profile_page'),
     path('send_friend_request/<int:user_id>/', send_friend_request, name='send_friend_request'),
     path('profile/<int:user_id>/', view_user_profile, name='user_profile'),
     path('follow/<int:user_id>/', follow_user, name='follow_user'),
     path('accept-friend-request/<int:request_id>/', accept_friend_request, name='accept_friend_request'),
     path('reject-friend-request/<int:request_id>/', reject_friend_request, name='reject_friend_request'),
+    # path('accounts/login/Terms/', terms_view, name='Terms'),  # fix the path
+
 
 
 ]
