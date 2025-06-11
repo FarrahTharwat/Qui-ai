@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QUI.AI - Guidebook</title>
+    <title>QUI.AI - Lesson</title>
     <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.20.15/babel.min.js"></script>
@@ -12,10 +12,10 @@
     <style type="text/css">
         @font-face { font-family: 'Madani'; src: url('./Fonts/Madani Arabic Regular.ttf') format('truetype'); }
         @font-face { font-family: 'Madani'; src: url('./Fonts/Madani Arabic Bold.ttf') format('truetype'); font-weight: bold; }
-        body { 
-            font-family: 'Madani', sans-serif; 
+        body {
+            font-family: 'Madani', sans-serif;
             background-color: #0d001a;
-            overflow-x: hidden; 
+            overflow-x: hidden;
         }
         .sidebar { background-color: #1a1a1a; z-index: 15; width: 200px; flex-shrink: 0; min-height: 100vh; position: fixed; top: 0; left: 0; padding-top: 2rem; display: flex; flex-direction: column; }
         .sidebar-item { display: flex; align-items: center; padding: 0.75rem 1rem; margin-bottom: 0.5rem; cursor: pointer; transition: background-color 0.2s; text-decoration: none; }
@@ -23,9 +23,14 @@
         .sidebar-item.active { background-color: #c74ece; color: white; border-top-right-radius: 9999px; border-bottom-right-radius: 9999px; padding-right: 2rem; }
         .sidebar-logo { font-size: 2rem; font-weight: bold; color: white; padding: 0 1rem 1.5rem; display: block; }
         .top-header { background-color: #1a1a1a; height: 60px; width: calc(100% - 200px); position: fixed; top: 0; right: 0; z-index: 10; }
-        .article-content h2 { font-size: 1.75rem; font-weight: bold; margin-top: 2rem; margin-bottom: 1rem; color: #c74ece; }
+        .article-content h1, .article-content h2 { font-size: 1.75rem; font-weight: bold; margin-top: 2rem; margin-bottom: 1rem; color: #c74ece; }
+        .article-content h3 { font-size: 1.5rem; font-weight: bold; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #f3aefb; }
         .article-content p { font-size: 1.1rem; line-height: 1.8; color: #d1d5db; margin-bottom: 1.5rem; }
         .article-content strong { color: #f3aefb; font-weight: bold; }
+        .article-content ul, .article-content ol { color: #d1d5db; margin-bottom: 1.5rem; padding-left: 1.5rem; }
+        .article-content li { margin-bottom: 0.5rem; line-height: 1.6; }
+        .article-content code { background-color: #2a2a2a; color: #f3aefb; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; }
+        .article-content pre { background-color: #1a1a1a; color: #d1d5db; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin-bottom: 1.5rem; }
 
         @keyframes twinkle {
             0% { transform: scale(0.5); opacity: 0.5; }
@@ -46,78 +51,362 @@
 <body>
     <div id="root"></div>
     <script type="text/babel">
-        const mockArticleData = { "title": "Unit 1 Guidebook (Preview)", "subtitle": "Key concepts for Neural Networks", "content": "<h2>What is a Neuron?</h2><p>In the context of artificial neural networks, a neuron (or node) is a computational unit that receives one or more inputs, performs a calculation, and produces an output. Inspired by biological neurons, an artificial neuron applies a mathematical function to its inputs.</p><h2>Layers and Architecture</h2><p>A neural network is organized into layers. At a minimum, it has an <strong>input layer</strong> and an <strong>output layer</strong>. The layers in between are called <strong>hidden layers</strong>. A 'deep' neural network is simply a network that has multiple hidden layers.</p>" };
-        const Sidebar = () => { const handleLogout = (e) => { e.preventDefault(); localStorage.removeItem('Q.Ai_userData'); window.location.href = 'Login.html'; }; const sidebarItems = [ { icon: 'fa-graduation-cap', text: 'LEARN', link: 'HomePage.html', active: true }, { icon: 'fa-upload', text: 'USER UPLOADS', link: '#', active: false }, { icon: 'fa-trophy', text: 'LEADERBOARDS', link: 'Leaderboards.html', active: false }, { icon: 'fa-user', text: 'PROFILE', link: 'MyProfile.html', active: false }, ]; return ( <div className="sidebar"> <a href="HomePage.html" className="sidebar-logo">QUI.AI</a> <div> {sidebarItems.map(item => ( <a key={item.text} href={item.link} className={`sidebar-item ${item.active ? 'active' : ''}`}> <i className={`fas ${item.icon} mr-3 text-white`}></i> <span className="text-lg font-semibold text-white">{item.text}</span> </a> ))} </div> <div className="relative group mt-auto mb-2"> <div className="sidebar-item"> <i className="fas fa-ellipsis-h mr-3 text-white"></i> <span className="text-lg font-semibold text-white">MORE</span> </div> <div className="absolute bottom-full left-0 mb-2 w-[190px] bg-[#2a2a2a] rounded-lg shadow-lg hidden group-hover:block transition-all duration-300 opacity-0 group-hover:opacity-100"> <button onClick={handleLogout} className="w-full text-left flex items-center text-white px-4 py-3 hover:bg-red-600 rounded-lg"> <i className="fas fa-sign-out-alt mr-3 text-white"></i> Log Out </button> </div> </div> </div> ); };
+        // API Configuration
+        const API_BASE_URL = 'http://localhost:8001/api/course';
+
+        // Mock data fallback
+        const mockLessonData = {
+            "id": 1,
+            "title": "Introduction to Neural Networks",
+            "content": `
+                <h2>What is a Neural Network?</h2>
+                <p>A neural network is a computational model inspired by the way biological neural networks in the human brain process information. It consists of interconnected nodes (neurons) that work together to solve complex problems.</p>
+
+                <h3>Key Components</h3>
+                <ul>
+                    <li><strong>Neurons:</strong> Basic processing units that receive inputs and produce outputs</li>
+                    <li><strong>Layers:</strong> Groups of neurons organized in input, hidden, and output layers</li>
+                    <li><strong>Weights:</strong> Parameters that determine the strength of connections between neurons</li>
+                    <li><strong>Activation Functions:</strong> Mathematical functions that determine neuron output</li>
+                </ul>
+
+                <h3>How Neural Networks Learn</h3>
+                <p>Neural networks learn through a process called <strong>training</strong>, where they adjust their weights based on examples. This involves:</p>
+                <ol>
+                    <li>Forward propagation: Data flows through the network</li>
+                    <li>Error calculation: Compare output with expected result</li>
+                    <li>Backpropagation: Adjust weights to minimize error</li>
+                    <li>Iteration: Repeat the process to improve accuracy</li>
+                </ol>
+            `,
+            "topic_id": 1,
+            "lesson_type": "theory",
+            "difficulty": "beginner",
+            "estimated_duration_minutes": 15,
+            "xp_reward": 10,
+            "learning_objectives": [
+                "Understand the basic structure of neural networks",
+                "Learn about neurons and layers",
+                "Grasp the concept of training and learning"
+            ],
+            "key_concepts": [
+                "Neural Networks",
+                "Neurons",
+                "Layers",
+                "Training",
+                "Backpropagation"
+            ]
+        };
+
+        const Sidebar = () => {
+            const handleLogout = (e) => {
+                e.preventDefault();
+                window.location.href = 'Login.html';
+            };
+
+            const sidebarItems = [
+                { icon: 'fa-graduation-cap', text: 'LEARN', link: 'HomePage.html', active: true },
+                { icon: 'fa-upload', text: 'USER UPLOADS', link: '#', active: false },
+                { icon: 'fa-trophy', text: 'LEADERBOARDS', link: 'Leaderboards.html', active: false },
+                { icon: 'fa-user', text: 'PROFILE', link: 'MyProfile.html', active: false },
+            ];
+
+            return (
+                <div className="sidebar">
+                    <a href="HomePage.html" className="sidebar-logo">QUI.AI</a>
+                    <div>
+                        {sidebarItems.map(item => (
+                            <a key={item.text} href={item.link} className={`sidebar-item ${item.active ? 'active' : ''}`}>
+                                <i className={`fas ${item.icon} mr-3 text-white`}></i>
+                                <span className="text-lg font-semibold text-white">{item.text}</span>
+                            </a>
+                        ))}
+                    </div>
+                    <div className="relative group mt-auto mb-2">
+                        <div className="sidebar-item">
+                            <i className="fas fa-ellipsis-h mr-3 text-white"></i>
+                            <span className="text-lg font-semibold text-white">MORE</span>
+                        </div>
+                        <div className="absolute bottom-full left-0 mb-2 w-[190px] bg-[#2a2a2a] rounded-lg shadow-lg hidden group-hover:block transition-all duration-300 opacity-0 group-hover:opacity-100">
+                            <button onClick={handleLogout} className="w-full text-left flex items-center text-white px-4 py-3 hover:bg-red-600 rounded-lg">
+                                <i className="fas fa-sign-out-alt mr-3 text-white"></i>
+                                Log Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         const TopHeader = () => (<div className="top-header"></div>);
 
-        // UPDATED: GuidebookHeader component with gradient border
-        const GuidebookHeader = ({ title, subtitle }) => (
-            // This parent div creates the gradient border effect
+        const LessonHeader = ({ title, lessonType, difficulty, duration }) => (
             <div className="bg-gradient-to-r from-pink-500 to-purple-500 p-0.5 rounded-xl shadow-lg">
-                {/* This child div is the actual content box with a solid background */}
                 <div className="bg-[#1c1c1c] rounded-lg p-6 sm:p-8">
                     <a href="HomePage.html" className="text-lg font-bold text-[#c74ece] hover:underline mb-8 inline-block">
                         <i className="fas fa-arrow-left mr-2"></i>
                         Back to Learning Path
                     </a>
-                    <div className="flex items-center gap-8">
-                        <div className="flex-shrink-0">
-                            <img 
-                                src="images/Article-01.png" 
-                                alt="QUI.AI Robot Helper" 
-                                className="w-56 h-56 relative bottom-4"
-                            />
-                        </div>
+                    <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-5xl font-extrabold text-white">{title}</h1>
-                            <p className="text-xl text-gray-400 mt-2">{subtitle}</p>
+                            <h1 className="text-4xl font-extrabold text-white mb-2">{title}</h1>
+                            <div className="flex gap-4 text-sm">
+                                <span className="bg-purple-600 px-2 py-1 rounded capitalize text-white">{lessonType}</span>
+                                <span className="bg-blue-600 px-2 py-1 rounded capitalize text-white">{difficulty}</span>
+                                <span className="bg-green-600 px-2 py-1 rounded text-white">
+                                    <i className="fas fa-clock mr-1"></i>
+                                    {duration} min
+                                </span>
+                            </div>
+                        </div>
+                        <div className="flex-shrink-0">
+                            <img
+                                src="images/Article-01.png"
+                                alt="QUI.AI Robot Helper"
+                                className="w-32 h-32"
+                                onError={(e) => {
+                                    e.target.style.display = 'none';
+                                }}
+                            />
                         </div>
                     </div>
                 </div>
             </div>
         );
-        
-        const StarsBackground = () => { /* ... No changes to this component ... */ };
 
-        const ArticlePage = () => {
-            const [articleData, setArticleData] = React.useState(null);
-            const [loading, setLoading] = React.useState(true);
-            const [error, setError] = React.useState(null);
-
+        const StarsBackground = () => {
             React.useEffect(() => {
-                const urlParams = new URLSearchParams(window.location.search);
-                const sectionId = urlParams.get('section') || 'nn_s1';
-                fetch(`https://api.yourdomain.com/articles/${sectionId}`)
-                    .then(response => {
-                        if (!response.ok) throw new Error('Network response was not ok');
-                        return response.json();
-                    })
-                    .then(data => {
-                        setArticleData(data);
-                        setLoading(false);
-                    })
-                    .catch(error => {
-                        console.warn("Backend fetch failed. Loading temporary preview data.", error);
-                        setArticleData(mockArticleData);
-                        setLoading(false);
-                        setError(null);
-                    });
+                const createStar = () => {
+                    const star = document.createElement('div');
+                    star.className = 'star';
+                    star.style.left = Math.random() * 100 + '%';
+                    star.style.top = Math.random() * 100 + '%';
+                    star.style.width = Math.random() * 3 + 1 + 'px';
+                    star.style.height = star.style.width;
+                    star.style.animationDuration = Math.random() * 3 + 2 + 's';
+                    document.body.appendChild(star);
+
+                    setTimeout(() => {
+                        if (star.parentNode) {
+                            star.parentNode.removeChild(star);
+                        }
+                    }, 5000);
+                };
+
+                const interval = setInterval(createStar, 200);
+                return () => clearInterval(interval);
             }, []);
 
+            return null;
+        };
+
+        // API Functions
+        const fetchLesson = async (lessonId) => {
+            const response = await fetch(`${API_BASE_URL}/lessons/${lessonId}`);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch lesson: ${response.status}`);
+            }
+            return await response.json();
+        };
+
+        const fetchNextLesson = async (lessonId) => {
+            const response = await fetch(`${API_BASE_URL}/lessons/${lessonId}/next`);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch next lesson: ${response.status}`);
+            }
+            return await response.json();
+        };
+
+        const fetchPreviousLesson = async (lessonId) => {
+            const response = await fetch(`${API_BASE_URL}/lessons/${lessonId}/previous`);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch previous lesson: ${response.status}`);
+            }
+            return await response.json();
+        };
+
+        const ArticlePage = () => {
+            const [lessonData, setLessonData] = React.useState(null);
+            const [navigationData, setNavigationData] = React.useState({ next: null, previous: null });
+            const [loading, setLoading] = React.useState(true);
+            const [error, setError] = React.useState(null);
+            const [currentLessonId, setCurrentLessonId] = React.useState(null);
+
+            React.useEffect(() => {
+                const loadLessonData = async () => {
+                    try {
+                        setLoading(true);
+                        setError(null);
+
+                        // Get lesson ID from URL parameters
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const lessonId = urlParams.get('lesson') || urlParams.get('id') || '1';
+                        setCurrentLessonId(lessonId);
+
+                        try {
+                            // Fetch lesson data
+                            const lesson = await fetchLesson(lessonId);
+                            setLessonData(lesson);
+
+                            // Fetch navigation data
+                            const [nextResult, previousResult] = await Promise.allSettled([
+                                fetchNextLesson(lessonId),
+                                fetchPreviousLesson(lessonId)
+                            ]);
+
+                            setNavigationData({
+                                next: nextResult.status === 'fulfilled' ? nextResult.value : null,
+                                previous: previousResult.status === 'fulfilled' ? previousResult.value : null
+                            });
+
+                        } catch (fetchError) {
+                            console.warn("Backend unavailable, using mock data:", fetchError);
+                            setLessonData(mockLessonData);
+                            setNavigationData({ next: null, previous: null });
+                        }
+
+                    } catch (error) {
+                        console.error("Error loading lesson:", error);
+                        setError("Failed to load lesson content");
+                        setLessonData(mockLessonData);
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+
+                loadLessonData();
+            }, []);
+
+            const handleNavigation = (lessonId, type) => {
+                if (lessonId) {
+                    window.location.href = `ArticlePage.html?lesson=${lessonId}`;
+                }
+            };
+
+            const renderObjectives = (objectives) => {
+                if (!objectives || objectives.length === 0) return null;
+
+                return (
+                    <div className="mb-8 p-4 bg-blue-900/20 rounded-lg border border-blue-500/30">
+                        <h3 className="text-lg font-semibold text-blue-300 mb-3">Learning Objectives</h3>
+                        <ul className="space-y-2">
+                            {objectives.map((objective, index) => (
+                                <li key={index} className="flex items-start text-gray-300">
+                                    <i className="fas fa-check-circle text-blue-400 mr-2 mt-1 flex-shrink-0"></i>
+                                    <span>{objective}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                );
+            };
+
+            const renderKeyConcepts = (concepts) => {
+                if (!concepts || concepts.length === 0) return null;
+
+                return (
+                    <div className="mb-8 p-4 bg-purple-900/20 rounded-lg border border-purple-500/30">
+                        <h3 className="text-lg font-semibold text-purple-300 mb-3">Key Concepts</h3>
+                        <div className="flex flex-wrap gap-2">
+                            {concepts.map((concept, index) => (
+                                <span key={index} className="px-3 py-1 bg-purple-600 text-white rounded-full text-sm">
+                                    {concept}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                );
+            };
+
             const renderContent = () => {
-                if (loading) { return <div className="text-center text-2xl text-gray-400 mt-12">Loading article...</div>; }
-                if (error) { return <div className="text-center text-2xl text-red-500 mt-12">{error}</div>; }
-                if (articleData) {
+                if (loading) {
+                    return (
+                        <div className="text-center text-2xl text-gray-400 mt-12">
+                            <i className="fas fa-spinner fa-spin mr-2"></i>
+                            Loading lesson...
+                        </div>
+                    );
+                }
+
+                if (error && !lessonData) {
+                    return (
+                        <div className="text-center text-2xl text-red-500 mt-12">
+                            <i className="fas fa-exclamation-triangle mr-2"></i>
+                            {error}
+                        </div>
+                    );
+                }
+
+                if (lessonData) {
                     return (
                         <>
-                            <GuidebookHeader 
-                                title={articleData.title} 
-                                subtitle={articleData.subtitle} 
+                            <LessonHeader
+                                title={lessonData.title}
+                                lessonType={lessonData.lesson_type || 'theory'}
+                                difficulty={lessonData.difficulty || 'beginner'}
+                                duration={lessonData.estimated_duration_minutes || 15}
                             />
-                            <div 
-                                className="article-content mt-12 px-2"
-                                dangerouslySetInnerHTML={{ __html: articleData.content }} 
+
+                            {renderObjectives(lessonData.learning_objectives)}
+                            {renderKeyConcepts(lessonData.key_concepts)}
+
+                            <div
+                                className="article-content mt-8 px-2"
+                                dangerouslySetInnerHTML={{ __html: lessonData.content }}
                             />
+
+                            {/* Navigation and Progress */}
+                            <div className="mt-12 p-6 bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-lg border border-purple-500/20">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-white mb-2">Lesson Complete!</h3>
+                                        <p className="text-gray-300">Great job finishing this lesson.</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-2xl font-bold text-[#c74ece]">+{lessonData.xp_reward || 10} XP</div>
+                                        <p className="text-sm text-gray-400">Points earned</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3 flex-wrap">
+                                    {navigationData.previous && navigationData.previous.previous_lesson_id && (
+                                        <button
+                                            onClick={() => handleNavigation(navigationData.previous.previous_lesson_id, 'previous')}
+                                            className="bg-[#c74ece] text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors flex items-center"
+                                        >
+                                            <i className="fas fa-arrow-left mr-2"></i>
+                                            Previous: {navigationData.previous.title || 'Previous Lesson'}
+                                        </button>
+                                    )}
+
+                                    {navigationData.next && navigationData.next.next_lesson_id && (
+                                        <button
+                                            onClick={() => handleNavigation(navigationData.next.next_lesson_id, 'next')}
+                                            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center"
+                                        >
+                                            Next: {navigationData.next.title || 'Next Lesson'}
+                                            <i className="fas fa-arrow-right ml-2"></i>
+                                        </button>
+                                    )}
+
+                                    {(!navigationData.next || !navigationData.next.next_lesson_id) && (
+                                        <button
+                                            onClick={() => window.location.href = 'HomePage.html'}
+                                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+                                        >
+                                            <i className="fas fa-home mr-2"></i>
+                                            Back to Course
+                                        </button>
+                                    )}
+                                </div>
+
+                                {navigationData.next && !navigationData.next.next_lesson_id && (
+                                    <p className="text-sm text-gray-400 mt-2">
+                                        <i className="fas fa-check-circle mr-1"></i>
+                                        You've completed all available lessons in this course!
+                                    </p>
+                                )}
+                            </div>
                         </>
                     );
                 }
@@ -140,7 +429,6 @@
             );
         };
 
-        // For brevity, the StarsBackground component is not expanded, but the working code is above.
         ReactDOM.createRoot(document.getElementById('root')).render(<ArticlePage />);
     </script>
 </body>

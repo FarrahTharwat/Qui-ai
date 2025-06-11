@@ -1,171 +1,200 @@
-from sqlalchemy import text
-from db_connection import engine, Base
-from models import Course, Topic, Lesson
+# Script to populate your database with test lessons for navigation testing
+
+from sqlalchemy.orm import Session
+from db_connection import get_db
+from models import Course, Topic, Lesson, LessonStatus
 
 
-def drop_views_and_recreate_tables():
-    """
-    Drop dependent views first, then recreate all tables and views
-    """
-    with engine.connect() as conn:
-        try:
-            # Start a transaction
-            trans = conn.begin()
+def add_more_lessons():
+    """Add more lessons to topic 1 for testing navigation"""
+    db = next(get_db())
 
-            print("Dropping dependent views...")
-            # Drop the views that depend on the tables
-            conn.execute(text("DROP VIEW IF EXISTS active_courses CASCADE;"))
-            conn.execute(text("DROP VIEW IF EXISTS published_lessons_with_metadata CASCADE;"))
+    try:
+        # Check if we already have lesson 1
+        lesson_1 = db.query(Lesson).filter(Lesson.id == 1).first()
+        if not lesson_1:
+            print("Lesson 1 not found. Please make sure your database has the initial lesson.")
+            return
 
-            print("Dropping functions...")
-            # Drop any functions that might depend on the tables
-            conn.execute(text("DROP FUNCTION IF EXISTS get_course_structure(INTEGER) CASCADE;"))
-            conn.execute(text("DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;"))
-            conn.execute(text("DROP FUNCTION IF EXISTS is_valid_json_array(TEXT) CASCADE;"))
+        topic_id = lesson_1.topic_id
+        print(f"Adding lessons to topic {topic_id}")
 
-            print("Dropping enums...")
-            # Drop custom enum types
-            conn.execute(text("DROP TYPE IF EXISTS difficulty_level CASCADE;"))
-            conn.execute(text("DROP TYPE IF EXISTS lesson_type CASCADE;"))
-            conn.execute(text("DROP TYPE IF EXISTS lesson_status CASCADE;"))
+        # Check how many lessons already exist in this topic
+        existing_lessons = db.query(Lesson).filter(Lesson.topic_id == topic_id).order_by(Lesson.order_index).all()
+        print(f"Found {len(existing_lessons)} existing lessons:")
+        for lesson in existing_lessons:
+            print(f"  - Lesson {lesson.id}: {lesson.title} (order: {lesson.order_index})")
 
-            # Commit the transaction
-            trans.commit()
-            print("Views, functions, and enums dropped successfully!")
+        # Add more lessons if we have fewer than 3
+        if len(existing_lessons) < 3:
+            next_order = max([l.order_index for l in existing_lessons]) + 1 if existing_lessons else 1
 
-        except Exception as e:
-            trans.rollback()
-            print(f"Error during cleanup: {e}")
-            raise
+            lessons_to_add = [
+                {
+                    "title": "Control Structures (If/Else)",
+                    "content": "Learn about conditional statements and control flow in Python.",
+                    "order_index": next_order
+                },
+                {
+                    "title": "Loops and Iteration",
+                    "content": "Master for loops, while loops, and iteration techniques.",
+                    "order_index": next_order + 1
+                }
+            ]
 
-    # Now drop and recreate tables using SQLAlchemy
-    print("Dropping and recreating tables...")
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+            for lesson_data in lessons_to_add:
+                if next_order <= 3:  # Only add if we don't already have this order
+                    lesson = Lesson(
+                        title=lesson_data["title"],
+                        content=lesson_data["content"],
+                        topic_id=topic_id,
+                        lesson_type="THEORY",
+                        difficulty="BEGINNER",
+                        order_index=lesson_data["order_index"],
+                        prerequisites="[]",
+                        learning_objectives="[]",
+                        key_concepts="[]",
+                        examples="[]",
+                        estimated_duration_minutes=25,
+                        xp_reward=15,
+                        status=LessonStatus.PUBLISHED.value,
+                        lesson_metadata="{}"
+                    )
+                    db.add(lesson)
+                    next_order += 1
 
-    # Recreate the views and functions
-    recreate_views_and_functions()
+            db.commit()
+            print(f"Added {len(lessons_to_add)} new lessons")
+        else:
+            print("Topic already has enough lessons for testing")
 
-    print("Tables recreated successfully!")
+        # Show final state
+        all_lessons = db.query(Lesson).filter(Lesson.topic_id == topic_id).order_by(Lesson.order_index).all()
+        print(f"\nFinal lesson structure for topic {topic_id}:")
+        for lesson in all_lessons:
+            print(f"  - Lesson {lesson.id}: {lesson.title} (order: {lesson.order_index}, status: {lesson.status})")
+
+    except Exception as e:
+        db.rollback()
+        print(f"Error adding lessons: {e}")
+    finally:
+        db.close()
 
 
-def recreate_views_and_functions():
-    """
-    Recreate the views and functions that were in the original schema
-    """
-    with engine.connect() as conn:
-        try:
-            trans = conn.begin()
+def add_second_topic_with_lessons():
+    """Add a second topic with lessons to test cross-topic navigation"""
+    db = next(get_db())
 
-            print("Recreating utility function...")
-            # Recreate the update function
-            conn.execute(text("""
-                CREATE OR REPLACE FUNCTION update_updated_at_column()
-                RETURNS TRIGGER AS $$
-                BEGIN
-                    NEW.updated_at = NOW();
-                    RETURN NEW;
-                END;
-                $$ language 'plpgsql';
-            """))
+    try:
+        # Get the course ID from lesson 1
+        lesson_1 = db.query(Lesson).filter(Lesson.id == 1).first()
+        if not lesson_1:
+            print("Lesson 1 not found")
+            return
 
-            # Recreate triggers
-            conn.execute(text("""
-                CREATE TRIGGER update_courses_updated_at 
-                    BEFORE UPDATE ON courses 
-                    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-            """))
+        topic_1 = db.query(Topic).filter(Topic.id == lesson_1.topic_id).first()
+        course_id = topic_1.course_id
 
-            conn.execute(text("""
-                CREATE TRIGGER update_topics_updated_at 
-                    BEFORE UPDATE ON topics 
-                    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-            """))
+        # Check if we already have a second topic
+        existing_topics = db.query(Topic).filter(Topic.course_id == course_id).order_by(Topic.order_index).all()
+        print(f"Found {len(existing_topics)} existing topics in course {course_id}")
 
-            conn.execute(text("""
-                CREATE TRIGGER update_lessons_updated_at 
-                    BEFORE UPDATE ON lessons 
-                    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-            """))
+        if len(existing_topics) < 2:
+            # Create second topic
+            next_topic_order = max([t.order_index for t in existing_topics]) + 1
 
-            print("Recreating views...")
-            # Recreate active_courses view
-            conn.execute(text("""
-                CREATE VIEW active_courses AS
-                SELECT 
-                    c.*,
-                    COUNT(DISTINCT t.id) as topic_count,
-                    COUNT(DISTINCT l.id) as lesson_count,
-                    SUM(CASE WHEN l.status = 'published' THEN 1 ELSE 0 END) as published_lesson_count
-                FROM courses c
-                LEFT JOIN topics t ON c.id = t.course_id AND t.is_active = true
-                LEFT JOIN lessons l ON t.id = l.topic_id
-                WHERE c.is_active = true
-                GROUP BY c.id, c.title, c.description, c.difficulty, c.estimated_duration_hours, c.is_active, c.created_at, c.updated_at;
-            """))
+            topic_2 = Topic(
+                title="Functions and Modules",
+                description="Learn about functions, parameters, and Python modules",
+                course_id=course_id,
+                order_index=next_topic_order,
+                difficulty="BEGINNER",
+                prerequisites="[]",
+                estimated_duration_minutes=90
+            )
+            db.add(topic_2)
+            db.commit()
+            db.refresh(topic_2)
 
-            # Recreate published_lessons_with_metadata view
-            conn.execute(text("""
-                CREATE VIEW published_lessons_with_metadata AS
-                SELECT 
-                    l.*,
-                    t.title as topic_title,
-                    t.course_id,
-                    c.title as course_title,
-                    c.difficulty as course_difficulty
-                FROM lessons l
-                JOIN topics t ON l.topic_id = t.id
-                JOIN courses c ON t.course_id = c.id
-                WHERE l.status = 'published' AND t.is_active = true AND c.is_active = true;
-            """))
+            print(f"Created topic: {topic_2.title} (ID: {topic_2.id})")
 
-            # Recreate get_course_structure function
-            conn.execute(text("""
-                CREATE OR REPLACE FUNCTION get_course_structure(course_id_param INTEGER)
-                RETURNS TABLE (
-                    course_id INTEGER,
-                    course_title VARCHAR(200),
-                    course_description TEXT,
-                    course_difficulty VARCHAR(50),
-                    topic_id INTEGER,
-                    topic_title VARCHAR(200),
-                    topic_order INTEGER,
-                    lesson_id INTEGER,
-                    lesson_title VARCHAR(200),
-                    lesson_order INTEGER,
-                    lesson_status VARCHAR(50)
-                ) AS $$
-                BEGIN
-                    RETURN QUERY
-                    SELECT 
-                        c.id,
-                        c.title,
-                        c.description,
-                        c.difficulty,
-                        t.id,
-                        t.title,
-                        t.order_index,
-                        l.id,
-                        l.title,
-                        l.order_index,
-                        l.status
-                    FROM courses c
-                    LEFT JOIN topics t ON c.id = t.course_id AND t.is_active = true
-                    LEFT JOIN lessons l ON t.id = l.topic_id
-                    WHERE c.id = course_id_param AND c.is_active = true
-                    ORDER BY t.order_index, l.order_index;
-                END;
-                $$ LANGUAGE plpgsql;
-            """))
+            # Add lessons to the new topic
+            lessons_data = [
+                {
+                    "title": "Defining Functions",
+                    "content": "Learn how to define and call functions in Python.",
+                    "order_index": 1
+                },
+                {
+                    "title": "Function Parameters and Arguments",
+                    "content": "Master different types of parameters and argument passing.",
+                    "order_index": 2
+                }
+            ]
 
-            trans.commit()
-            print("Views and functions recreated successfully!")
+            for lesson_data in lessons_data:
+                lesson = Lesson(
+                    title=lesson_data["title"],
+                    content=lesson_data["content"],
+                    topic_id=topic_2.id,
+                    lesson_type="THEORY",
+                    difficulty="BEGINNER",
+                    order_index=lesson_data["order_index"],
+                    prerequisites="[]",
+                    learning_objectives="[]",
+                    key_concepts="[]",
+                    examples="[]",
+                    estimated_duration_minutes=30,
+                    xp_reward=20,
+                    status=LessonStatus.PUBLISHED.value,
+                    lesson_metadata="{}"
+                )
+                db.add(lesson)
 
-        except Exception as e:
-            trans.rollback()
-            print(f"Error recreating views and functions: {e}")
-            # Don't raise here as the main tables are already created
+            db.commit()
+            print(f"Added {len(lessons_data)} lessons to the new topic")
+        else:
+            print("Course already has multiple topics")
+
+    except Exception as e:
+        db.rollback()
+        print(f"Error adding second topic: {e}")
+    finally:
+        db.close()
+
+
+def show_navigation_structure():
+    """Show the complete navigation structure"""
+    db = next(get_db())
+
+    try:
+        print("\n=== COMPLETE NAVIGATION STRUCTURE ===")
+
+        courses = db.query(Course).all()
+        for course in courses:
+            print(f"\nCourse {course.id}: {course.title}")
+
+            topics = db.query(Topic).filter(Topic.course_id == course.id).order_by(Topic.order_index).all()
+            for topic in topics:
+                print(f"  Topic {topic.id}: {topic.title} (order: {topic.order_index})")
+
+                lessons = db.query(Lesson).filter(Lesson.topic_id == topic.id).order_by(Lesson.order_index).all()
+                for lesson in lessons:
+                    print(
+                        f"    Lesson {lesson.id}: {lesson.title} (order: {lesson.order_index}, status: {lesson.status})")
+
+    except Exception as e:
+        print(f"Error showing structure: {e}")
+    finally:
+        db.close()
 
 
 if __name__ == "__main__":
-    drop_views_and_recreate_tables()
+    print("1. Adding more lessons to existing topic...")
+    add_more_lessons()
+
+    print("\n2. Adding second topic with lessons...")
+    add_second_topic_with_lessons()
+
+    print("\n3. Showing complete structure...")
+    show_navigation_structure()
