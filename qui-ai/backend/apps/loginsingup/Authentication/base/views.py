@@ -6,6 +6,10 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from .models import UserProfile , FriendRequest, Follow
 from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
 
 
 
@@ -35,6 +39,16 @@ def authView(request):
     else:
         form = CustomUserCreationForm()
     return render(request, "registration/signup.html", {"form": form})
+
+
+def terms_view(request):
+    return render(request, 'registration/Terms.html')  
+
+def privacy_view(request):
+    return render(request, 'registration/Privacy.html')
+
+
+
 
 
 
@@ -123,6 +137,8 @@ def view_user_profile(request, user_id):
     return render(request, 'user_profile.html', context)
 
 
+
+
 @login_required
 def accept_friend_request(request, user_id):
     if request.method == 'POST':
@@ -139,4 +155,9 @@ def reject_friend_request(request, user_id):
         friend_request = get_object_or_404(FriendRequest, from_user=from_user, to_user=request.user)
         friend_request.delete()
     return redirect('base:user_profile', user_id=user_id)
+
+
+
+# def terms_view(request):
+#     return render(request, 'registration/Terms.html')  
 
