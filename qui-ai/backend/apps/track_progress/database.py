@@ -1,6 +1,9 @@
-import motor.motor_asyncio
 import os
+from appwrite.client import Client
+from appwrite.services.databases import Databases
 
-db_url = os.getenv("MONGO_URL")
-client = motor.motor_asyncio.AsyncIOMotorClient(db_url)
-db = client["track_progress_db"]
+client = Client()
+client.set_endpoint(os.getenv("APPWRITE_ENDPOINT"))
+client.set_project(os.getenv("APPWRITE_PROJECT"))
+client.set_key(os.getenv("APPWRITE_API_KEY"))
+database = Databases(client)

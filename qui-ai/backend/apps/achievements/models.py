@@ -1,5 +1,4 @@
 from pydantic import BaseModel
 
-class AchievementInput(BaseModel):
+class AchievementRequest(BaseModel):
     user_id: str
-    xp: int

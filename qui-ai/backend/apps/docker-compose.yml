@@ -1,33 +1,120 @@
-# version: "3.8"
-services:
-  mongo:
-    image: mongo
-    ports:
-      - "27017:27017"
+# # version: "3.9"
 
+# services:
+#   track_progress:
+#     build: ./track_progress
+#     env_file:
+#       - ./track_progress/.env
+#     ports:
+#       - "8001:8000"
+#     environment:
+#       XP_SERVICE_URL: http://xp_points:8002
+
+#   xp_points:
+#     build: ./xp_points
+#     env_file:
+#       - ./xp_points/.env
+#     ports:
+#       - "8002:8000"
+#     environment:
+#       ACHIEVEMENT_URL: http://achievements:8003
+#     depends_on:
+#       - achievements
+      
+#   achievements:
+#     build: ./achievements
+#     env_file:
+#       - ./achievements/.env
+#     ports:
+#       - "8003:8000"
+#     environment:
+#       ACHIEVEMENT_URL: http://xp_points:8002
+
+# version: "3.9"
+
+# services:
+#   track_progress:
+#     build: ./track_progress
+#     container_name: track_progress
+#     env_file:
+#       - ./track_progress/.env
+#     ports:
+#       - "8001:8000"
+#     environment:
+#       XP_SERVICE_URL: http://xp_points:8000
+#     depends_on:
+#       - xp_points
+#     networks:
+#       - appnet
+
+#   xp_points:
+#     build: ./xp_points
+#     container_name: xp_points
+#     env_file:
+#       - ./xp_points/.env
+#     ports:
+#       - "8002:8000"
+#     environment:
+#       ACHIEVEMENT_URL: http://achievements:8000
+#     depends_on:
+#       - achievements
+#     networks:
+#       - appnet
+
+#   achievements:
+#     build: ./achievements
+#     container_name: achievements
+#     env_file:
+#       - ./achievements/.env
+#     ports:
+#       - "8003:8000"
+#     networks:
+#       - appnet
+
+# networks:
+#   appnet:
+#     driver: bridge
+version: "3.9"
+
+services:
   track_progress:
     build: ./track_progress
-    ports:
-      - "8000:8000"
+    container_name: track_progress
     env_file:
       - ./track_progress/.env
+    ports:
+      - "8001:8000"  # Exposed on host as :8001
+    environment:
+      XP_SERVICE_URL: http://xp_points:8000  # Internal service URL
     depends_on:
-      - mongo
+      - xp_points
+    networks:
+      - appnet
 
   xp_points:
     build: ./xp_points
-    ports:
-      - "8001:8000"
+    container_name: xp_points
     env_file:
       - ./xp_points/.env
+    ports:
+      - "8002:8000"  # Exposed on host as :8002
+    environment:
+      ACHIEVEMENT_URL: http://achievements:8000  # Internal service URL
     depends_on:
-      - mongo
+      - achievements
+    networks:
+      - appnet
 
   achievements:
     build: ./achievements
-    ports:
-      - "8002:8000"
+    container_name: achievements
     env_file:
       - ./achievements/.env
-    depends_on:
-      - mongo
+    ports:
+      - "8003:8000"  # Exposed on host as :8003
+    networks:
+      - appnet
+
+networks:
+  appnet:
+    driver: bridge

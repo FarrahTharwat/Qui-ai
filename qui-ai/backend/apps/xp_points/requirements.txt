@@ -4,3 +4,5 @@ pydantic
 uvicorn[standard]
 httpx
 python-dotenv
+requests
+appwrite<9.0.0
