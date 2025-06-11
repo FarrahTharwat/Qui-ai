@@ -1,0 +1,8 @@
+Django>=3.2
+djangorestframework
+celery
+redis
+channels
+channels-redis
+psycopg2-binary
+dj-database-url
