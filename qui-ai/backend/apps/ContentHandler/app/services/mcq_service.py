@@ -8,6 +8,8 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from supabase import create_client, Client
 import os
+from dotenv import load_dotenv
+
 
 # Import the MCQ generator functions
 from app.core.mcq_generator import (
@@ -16,6 +18,7 @@ from app.core.mcq_generator import (
 )
 
 logger = logging.getLogger(__name__)
+load_dotenv()
 
 class MCQGenerationService:
     """Service for generating MCQs from document text and storing in Supabase"""
