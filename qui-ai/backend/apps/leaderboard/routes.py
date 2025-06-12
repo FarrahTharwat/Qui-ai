@@ -3,7 +3,7 @@ import asyncio
 import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import and_
+from sqlalchemy import and_, delete
 from fastapi import APIRouter, HTTPException, Depends
 from database import redis_client, LEADERBOARD_PREFIX, TRACKING_SERVICE_URL, get_db, sync_redis_with_postgresql
 from models import Leaderboard, LeaderboardEntry
@@ -19,8 +19,10 @@ sync_task = None
 
 @router.on_event("startup")
 async def start_sync_task():
+    """Start background sync task (for FastAPI versions < 0.93.0)"""
     global sync_task
     if sync_task is None:
+        logger.info("Starting background sync task...")
         sync_task = asyncio.create_task(sync_redis_with_postgresql())
 
 
@@ -47,6 +49,9 @@ async def submit_score(entry: LeaderboardEntry, db: AsyncSession = Depends(get_d
             if entry.score > existing_entry.score:
                 existing_entry.score = entry.score
                 logger.info(f"Updated score for {entry.username} in {entry.course_id}: {entry.score}")
+            else:
+                logger.info(
+                    f"Score not updated for {entry.username} in {entry.course_id}: {entry.score} <= {existing_entry.score}")
         else:
             # Create new entry
             new_entry = Leaderboard(
@@ -63,7 +68,10 @@ async def submit_score(entry: LeaderboardEntry, db: AsyncSession = Depends(get_d
         leaderboard_key = f"{LEADERBOARD_PREFIX}{entry.course_id}"
         redis_client.zadd(leaderboard_key, {entry.username: entry.score})
 
-        return {"message": f"Score {entry.score} submitted for {entry.username} in course {entry.course_id}"}
+        return {
+            "message": f"Score {entry.score} submitted for {entry.username} in course {entry.course_id}",
+            "updated": True
+        }
 
     except Exception as e:
         await db.rollback()
@@ -75,7 +83,12 @@ async def submit_score(entry: LeaderboardEntry, db: AsyncSession = Depends(get_d
 async def submit_scores(entries: List[LeaderboardEntry], db: AsyncSession = Depends(get_db)):
     """Submit multiple scores"""
     try:
+        if not entries:
+            raise HTTPException(status_code=400, detail="No entries provided")
+
         updated_count = 0
+        added_count = 0
+
         for entry in entries:
             if entry.score < 0:
                 continue  # Skip invalid scores
@@ -102,7 +115,7 @@ async def submit_scores(entries: List[LeaderboardEntry], db: AsyncSession = Depe
                     score=entry.score
                 )
                 db.add(new_entry)
-                updated_count += 1
+                added_count += 1
 
         await db.commit()
 
@@ -114,7 +127,12 @@ async def submit_scores(entries: List[LeaderboardEntry], db: AsyncSession = Depe
                     pipe.zadd(leaderboard_key, {entry.username: entry.score})
             pipe.execute()
 
-        return {"message": f"Successfully processed {updated_count} scores"}
+        return {
+            "message": f"Successfully processed {len(entries)} entries",
+            "updated": updated_count,
+            "added": added_count,
+            "total_processed": updated_count + added_count
+        }
 
     except Exception as e:
         await db.rollback()
@@ -142,16 +160,22 @@ async def get_user_rank(course_id: str, username: str):
             "rank": rank + 1,  # Convert to 1-based ranking
             "score": int(score)
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error getting user rank: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/top/{course_id}")
 @router.get("/top/{course_id}/{count}")
-async def get_top_players(course_id: str, count: int, db: AsyncSession = Depends(get_db)):
+async def get_top_players(course_id: str, count: int = 10, db: AsyncSession = Depends(get_db)):
     """Get top players for a course"""
     if count <= 0:
         raise HTTPException(status_code=400, detail="Count must be positive")
+
+    if count > 1000:  # Reasonable limit
+        raise HTTPException(status_code=400, detail="Count cannot exceed 1000")
 
     leaderboard_key = f"{LEADERBOARD_PREFIX}{course_id}"
 
@@ -179,7 +203,7 @@ async def get_top_players(course_id: str, count: int, db: AsyncSession = Depends
         top_players = result.scalars().all()
 
         if not top_players:
-            raise HTTPException(status_code=404, detail="No players found for this course")
+            return []  # Return empty list instead of 404
 
         return [
             {
@@ -195,6 +219,24 @@ async def get_top_players(course_id: str, count: int, db: AsyncSession = Depends
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/courses/")
+async def get_courses(db: AsyncSession = Depends(get_db)):
+    """Get list of all courses with leaderboards"""
+    try:
+        result = await db.execute(
+            select(Leaderboard.course_id).distinct()
+        )
+        courses = result.scalars().all()
+
+        return {
+            "courses": courses,
+            "count": len(courses)
+        }
+    except Exception as e:
+        logger.error(f"Error getting courses: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/fetch_and_update_leaderboard/")
 async def fetch_and_update_leaderboard(db: AsyncSession = Depends(get_db)):
     """Fetch and update leaderboard from external service"""
@@ -202,13 +244,19 @@ async def fetch_and_update_leaderboard(db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=500, detail="TRACKING_SERVICE_URL not configured")
 
     try:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.get(TRACKING_SERVICE_URL)
             response.raise_for_status()
             scores = response.json()
 
+        if not isinstance(scores, list):
+            raise HTTPException(status_code=400, detail="Expected list of scores from tracking service")
+
         # Process the scores directly
         updated_count = 0
+        added_count = 0
+        error_count = 0
+
         for score_data in scores:
             try:
                 entry = LeaderboardEntry(**score_data)
@@ -235,10 +283,11 @@ async def fetch_and_update_leaderboard(db: AsyncSession = Depends(get_db)):
                         score=entry.score
                     )
                     db.add(new_entry)
-                    updated_count += 1
+                    added_count += 1
 
             except Exception as entry_error:
                 logger.error(f"Error processing entry {score_data}: {entry_error}")
+                error_count += 1
                 continue
 
         await db.commit()
@@ -254,7 +303,13 @@ async def fetch_and_update_leaderboard(db: AsyncSession = Depends(get_db)):
                     continue
             pipe.execute()
 
-        return {"message": f"Updated {updated_count} leaderboard entries"}
+        return {
+            "message": f"Processed {len(scores)} entries",
+            "updated": updated_count,
+            "added": added_count,
+            "errors": error_count,
+            "total_processed": updated_count + added_count
+        }
 
     except httpx.HTTPError as e:
         raise HTTPException(status_code=500, detail=f"Error fetching scores: {str(e)}")
@@ -268,27 +323,62 @@ async def fetch_and_update_leaderboard(db: AsyncSession = Depends(get_db)):
 async def reset_leaderboard(course_id: str, db: AsyncSession = Depends(get_db)):
     """Reset leaderboard for a course"""
     try:
-        # Delete from database
-        result = await db.execute(
+        # Count existing entries
+        count_result = await db.execute(
             select(Leaderboard).where(Leaderboard.course_id == course_id)
         )
-        entries = result.scalars().all()
+        entries = count_result.scalars().all()
+        entry_count = len(entries)
 
-        if not entries:
+        if entry_count == 0:
             raise HTTPException(status_code=404, detail="No leaderboard found for this course")
 
-        for entry in entries:
-            await db.delete(entry)
-
+        # Delete from database
+        await db.execute(
+            delete(Leaderboard).where(Leaderboard.course_id == course_id)
+        )
         await db.commit()
 
         # Delete from Redis
         leaderboard_key = f"{LEADERBOARD_PREFIX}{course_id}"
         redis_client.delete(leaderboard_key)
 
-        return {"message": f"Leaderboard for course {course_id} reset successfully"}
+        return {
+            "message": f"Leaderboard for course {course_id} reset successfully",
+            "deleted_entries": entry_count
+        }
 
+    except HTTPException:
+        raise
     except Exception as e:
         await db.rollback()
         logger.error(f"Error resetting leaderboard: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/stats/{course_id}")
+async def get_course_stats(course_id: str, db: AsyncSession = Depends(get_db)):
+    """Get statistics for a course"""
+    try:
+        result = await db.execute(
+            select(Leaderboard).where(Leaderboard.course_id == course_id)
+        )
+        entries = result.scalars().all()
+
+        if not entries:
+            raise HTTPException(status_code=404, detail="No data found for this course")
+
+        scores = [entry.score for entry in entries]
+
+        return {
+            "course_id": course_id,
+            "total_players": len(entries),
+            "highest_score": max(scores),
+            "lowest_score": min(scores),
+            "average_score": sum(scores) / len(scores)
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting course stats: {e}")
         raise HTTPException(status_code=500, detail=str(e))

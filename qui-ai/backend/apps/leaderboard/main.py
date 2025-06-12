@@ -1,34 +1,21 @@
-# Updated main.py with CORS
+# Updated main.py with CORS and proper port configuration
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from routes import router
 from database import initialize_db, test_connections
 import asyncio
 import logging
+import os
+from contextlib import asynccontextmanager
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(
-    title="Leaderboard Service",
-    version="0.2.0",
-    description="Leaderboard service using Supabase and Redis"
-)
 
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your frontend domain
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize services on startup"""
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan manager"""
     try:
         logger.info("Starting leaderboard service...")
 
@@ -42,9 +29,30 @@ async def startup_event():
 
         logger.info("Leaderboard service started successfully")
 
+        yield
+
     except Exception as e:
         logger.error(f"Failed to start service: {e}")
         raise
+    finally:
+        logger.info("Shutting down leaderboard service...")
+
+
+app = FastAPI(
+    title="Leaderboard Service",
+    version="0.2.0",
+    description="Leaderboard service using Supabase and Redis",
+    lifespan=lifespan
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify your frontend domain
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")
@@ -55,7 +63,8 @@ def read_root():
         "version": "0.2.0",
         "status": "running",
         "database": "Supabase PostgreSQL",
-        "cache": "Redis"
+        "cache": "Redis",
+        "port": 8005
     }
 
 
@@ -75,7 +84,8 @@ async def health_check():
         return {
             "status": "healthy",
             "database": "connected",
-            "cache": "connected"
+            "cache": "connected",
+            "port": 8005
         }
     except Exception as e:
         logger.error(f"Health check failed: {e}")
@@ -88,10 +98,13 @@ app.include_router(router, prefix="/api")
 if __name__ == "__main__":
     import uvicorn
 
+    # Get port from environment or use default 8005
+    port = int(os.getenv("PORT", 8005))
+
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8000,
+        port=port,
         reload=True,
         log_level="info"
     )
