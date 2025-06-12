@@ -14,7 +14,7 @@ def track_progress(progress: Progress):
         # Store progress in Appwrite
         databases.create_document(
             database_id=os.getenv("APPWRITE_DB"),
-            collection_id=os.getenv("APPWRITE_COLLECTION"),
+            collection_id=os.getenv("PROGRESS_COLLECTION"),
             document_id=str(uuid.uuid4()),
             data=data
         )
