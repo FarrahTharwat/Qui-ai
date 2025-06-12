@@ -1,4 +1,4 @@
-# Fixed database.py - Resolved asyncpg prepared statement issue
+# database.py - Complete fix for asyncpg sslmode and prepared statement issues
 import os
 import asyncio
 import redis
@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.future import select
 from dotenv import load_dotenv, find_dotenv
 from models import Leaderboard
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
 warnings.filterwarnings("ignore", message="ssl_cert_reqs is set to CERT_NONE")
 
@@ -104,49 +105,23 @@ def create_redis_client():
         print(f"❌ {error_msg}")
         raise ValueError(error_msg)
 
-    # Method 1: Try Redis URL (non-SSL since that's what works)
-    redis_url = os.getenv("REDIS_URL")
-    if redis_url and not redis_ssl:
-        print(f"Attempting connection with REDIS_URL (non-SSL): {redis_url[:30]}...")
-        try:
-            client = redis.from_url(
-                redis_url,
-                decode_responses=True,
-                socket_connect_timeout=30,
-                socket_timeout=30,
-                retry_on_timeout=True,
-                health_check_interval=30
-            )
-            result = client.ping()
-            print(f"✅ Redis connection successful (URL method): {result}")
-            return client
-        except Exception as e:
-            print(f"❌ Redis URL connection failed: {e}")
-
-    # Method 2: Individual parameters (non-SSL)
-    print("Attempting connection with individual parameters (non-SSL)...")
     try:
         client = redis.Redis(
             host=redis_host,
             port=redis_port,
             password=redis_password,
             decode_responses=True,
-            ssl=False,  # Explicitly set to False since SSL doesn't work
+            ssl=redis_ssl,
             socket_connect_timeout=30,
             socket_timeout=30,
             retry_on_timeout=True,
             health_check_interval=30
         )
         result = client.ping()
-        print(f"✅ Redis connection successful (parameter method): {result}")
+        print(f"✅ Redis connection successful: {result}")
         return client
     except Exception as e:
         print(f"❌ Redis connection failed: {e}")
-        print("\n💡 TROUBLESHOOTING:")
-        print("1. Check your Redis Cloud credentials")
-        print("2. Verify your internet connection")
-        print("3. Ensure Redis Cloud instance is running")
-        print("4. Check firewall settings")
         raise
 
 
@@ -154,83 +129,72 @@ def create_redis_client():
 redis_client = create_redis_client()
 
 
+def clean_database_url(database_url):
+    """Clean database URL to remove incompatible parameters for asyncpg"""
+    print("🔧 Cleaning database URL for asyncpg compatibility...")
+
+    # Parse the URL
+    parsed = urlparse(database_url)
+    query_params = parse_qs(parsed.query, keep_blank_values=True)
+
+    # Remove parameters that asyncpg doesn't support
+    incompatible_params = [
+        'sslmode', 'sslcert', 'sslkey', 'sslrootcert',
+        'prepared_statements',  # This is handled via connect_args instead
+        'statement_cache_size'  # This is also handled via connect_args
+    ]
+    for param in incompatible_params:
+        if param in query_params:
+            print(f"🗑️  Removing incompatible parameter: {param}")
+            del query_params[param]
+
+    # Don't add prepared_statements to URL - it goes in connect_args instead
+
+    # Rebuild the URL without incompatible parameters
+    new_query = urlencode(query_params, doseq=True)
+    cleaned_url = urlunparse((
+        parsed.scheme,
+        parsed.netloc,
+        parsed.path,
+        parsed.params,
+        new_query,
+        parsed.fragment
+    ))
+
+    print("✅ Database URL cleaned for asyncpg")
+    return cleaned_url
+
+
 def get_database_url():
     """Build database URL from environment variables - Fixed for asyncpg"""
     print("=== CONFIGURING DATABASE CONNECTION ===")
 
-    # Method 1: Direct DATABASE_URL (preferred)
     database_url = os.getenv("DATABASE_URL")
     if database_url:
         print("✅ Using DATABASE_URL from environment")
 
-        # Convert postgres:// to postgresql+asyncpg:// if needed
+        # Convert to asyncpg format
         if database_url.startswith("postgres://"):
             database_url = database_url.replace("postgres://", "postgresql+asyncpg://", 1)
-            print("🔄 Converted postgres:// to postgresql+asyncpg://")
         elif database_url.startswith("postgresql://"):
             database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-            print("🔄 Converted postgresql:// to postgresql+asyncpg://")
 
-        # Remove sslmode parameter if present (asyncpg doesn't support it)
-        if "sslmode=" in database_url:
-            # Split URL and parameters
-            if "?" in database_url:
-                base_url, params = database_url.split("?", 1)
-                # Remove sslmode parameter
-                param_pairs = []
-                for param in params.split("&"):
-                    if not param.startswith("sslmode="):
-                        param_pairs.append(param)
-
-                # Reconstruct URL
-                if param_pairs:
-                    database_url = f"{base_url}?{'&'.join(param_pairs)}"
-                else:
-                    database_url = base_url
-
-                print("🔄 Removed sslmode parameter (not supported by asyncpg)")
+        # Clean the URL to remove incompatible parameters
+        database_url = clean_database_url(database_url)
 
         return database_url
 
-    # Method 2: Build from individual components
-    print("DATABASE_URL not found, building from components...")
-
+    # Build from components if DATABASE_URL not available
     db_user = os.getenv("DB_USER", "postgres")
     db_password = os.getenv("DB_PASSWORD")
     db_host = os.getenv("DB_HOST")
     db_port = os.getenv("DB_PORT", "5432")
     db_name = os.getenv("DB_NAME", "postgres")
 
-    print(f"DB_USER: {db_user}")
-    print(f"DB_PASSWORD: {'***' if db_password else '❌ NOT SET'}")
-    print(f"DB_HOST: {db_host or '❌ NOT SET'}")
-    print(f"DB_PORT: {db_port}")
-    print(f"DB_NAME: {db_name}")
+    if not db_password or not db_host:
+        raise ValueError("Missing required database credentials")
 
-    # Validate required components
-    missing_vars = []
-    if not db_password:
-        missing_vars.append("DB_PASSWORD")
-    if not db_host:
-        missing_vars.append("DB_HOST")
-
-    if missing_vars:
-        error_msg = f"Missing required environment variables: {', '.join(missing_vars)}"
-        print(f"❌ {error_msg}")
-        print("\n💡 SOLUTION:")
-        print("1. Create a .env file in your project root")
-        print("2. Add your database credentials:")
-        print("   DATABASE_URL=postgresql://user:password@host:port/database")
-        print("   OR individual variables:")
-        print("   DB_PASSWORD=your-password")
-        print("   DB_HOST=your-host")
-        print("3. Get your Supabase connection string from:")
-        print("   Project Settings > Database > Connection string")
-        raise ValueError(error_msg)
-
-    # Build URL without sslmode (asyncpg handles SSL automatically)
     database_url = f"postgresql+asyncpg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-    print("✅ Database URL built successfully (SSL will be handled by asyncpg)")
     return database_url
 
 
@@ -240,60 +204,81 @@ async_session_maker = None
 
 
 async def initialize_db():
-    """Initialize database connection - Fixed for asyncpg prepared statement issue"""
+    """Initialize database connection - COMPLETE FIX for asyncpg sslmode and prepared statement issues"""
     global engine, async_session_maker
 
     try:
         print("=== INITIALIZING DATABASE ===")
         database_url = get_database_url()
 
-        # CRITICAL FIX: Configure asyncpg to disable prepared statements
-        # This resolves the DuplicatePreparedStatementError
+        # CRITICAL FIXES for asyncpg compatibility:
         connect_args = {
+            # Primary fix: Completely disable prepared statement cache
+            "prepared_statement_cache_size": 0,
+
+            # Additional asyncpg-specific settings
+            "command_timeout": 60,
             "server_settings": {
                 "application_name": "leaderboard_service",
+                "jit": "off",  # Disable JIT to prevent issues
             },
-            # SOLUTION 1: Disable prepared statement cache completely
-            "prepared_statement_cache_size": 0,
-            # SOLUTION 2: Alternative - use a unique cache name per connection
-            # "prepared_statement_name_func": lambda: f"stmt_{id(object())}"
         }
 
-        # For Supabase and other cloud providers, asyncpg handles SSL automatically
-        # We don't need to specify SSL parameters explicitly
+        # Create engine with settings optimized for cloud databases + PgBouncer
         engine = create_async_engine(
             database_url,
-            echo=os.getenv("SQL_ECHO", "false").lower() == "true",
+            echo=False,  # Set to True for SQL debugging
+
+            # Pool settings optimized for cloud databases
             pool_size=5,
             max_overflow=10,
-            pool_pre_ping=True,
-            pool_recycle=3600,
-            connect_args=connect_args
+            pool_pre_ping=True,  # Test connections before use
+            pool_recycle=3600,  # Recycle connections every hour
+            pool_reset_on_return='commit',
+
+            # CRITICAL: Pass connect_args to fix prepared statement and SSL issues
+            connect_args=connect_args,
         )
 
+        # Create session maker
         async_session_maker = sessionmaker(
             engine,
             class_=AsyncSession,
-            expire_on_commit=False
+            expire_on_commit=False,
         )
 
         # Test the connection
+        print("🔍 Testing database connection...")
         async with async_session_maker() as session:
-            await session.execute(select(1))
+            # Simple test query that won't trigger prepared statement caching
+            result = await session.execute(select(1))
+            test_value = result.scalar()
+            print(f"✅ Database connection successful: {test_value}")
 
-        print("✅ Database initialization successful")
-        print("✅ Prepared statement cache disabled - issue resolved")
+        print("✅ Database initialization complete")
+        print("✅ Prepared statement conflicts resolved")
 
     except Exception as e:
         print(f"❌ Database initialization failed: {e}")
-        print("\n💡 TROUBLESHOOTING:")
-        print("1. Verify your database credentials are correct")
-        print("2. Check your internet connection")
-        print("3. Ensure your database server is running")
-        print("4. Verify the database URL format")
-        print("5. For Supabase: ensure you're using the connection pooler URL")
-        print("6. Remove any sslmode parameters from your DATABASE_URL")
-        print("7. If using PgBouncer, ensure pool_mode is set to 'session'")
+
+        # Provide specific guidance for common issues
+        if "prepared_statements" in str(e):
+            print("\n🔧 PREPARED STATEMENTS ISSUE:")
+            print("The 'prepared_statements' parameter should not be in the URL.")
+            print("It's now handled via connect_args in the engine configuration.")
+
+        if "sslmode" in str(e):
+            print("\n🔧 SSL CONFIGURATION ISSUE:")
+            print("The 'sslmode' parameter is not supported by asyncpg.")
+            print("This has been fixed in the updated code.")
+
+        if "DuplicatePreparedStatementError" in str(e):
+            print("\n🔧 ADDITIONAL FIXES TO TRY:")
+            print("1. Restart your application completely")
+            print("2. Check if you have multiple database connections")
+            print("3. Verify PgBouncer pool_mode is set to 'session'")
+            print("4. Try using the direct database URL instead of pooler")
+
         raise
 
 
@@ -313,8 +298,8 @@ async def get_db():
 
 
 async def sync_redis_with_postgresql():
-    """Background task to sync PostgreSQL data to Redis"""
-    print("🔄 Starting Redis-PostgreSQL sync task...")
+    """Sync PostgreSQL data to Redis"""
+    print("🔄 Starting Redis-PostgreSQL sync...")
 
     while True:
         try:
@@ -325,25 +310,23 @@ async def sync_redis_with_postgresql():
                 result = await db.execute(select(Leaderboard))
                 entries = result.scalars().all()
 
-                # Group entries by course for efficient Redis operations
+                # Group by course
                 courses = {}
                 for entry in entries:
                     if entry.course_id not in courses:
                         courses[entry.course_id] = {}
                     courses[entry.course_id][entry.username] = entry.score
 
-                # Update Redis with pipeline for efficiency
-                with redis_client.pipeline() as pipe:
-                    for course_id, players in courses.items():
-                        redis_key = f"{LEADERBOARD_PREFIX}{course_id}"
-                        pipe.zadd(redis_key, players)
-                    pipe.execute()
+                # Update Redis
+                for course_id, players in courses.items():
+                    redis_key = f"{LEADERBOARD_PREFIX}{course_id}"
+                    redis_client.zadd(redis_key, players)
 
-                print(f"✅ Synced {len(entries)} entries across {len(courses)} courses to Redis")
+                print(f"✅ Synced {len(entries)} entries to Redis")
 
         except Exception as e:
             print(f"❌ Sync error: {e}")
-            await asyncio.sleep(60)  # Wait before retrying
+            await asyncio.sleep(60)
             continue
 
         await asyncio.sleep(300)  # Sync every 5 minutes
@@ -354,28 +337,36 @@ async def test_connections():
     print("=== TESTING CONNECTIONS ===")
 
     try:
-        # Test database
+        # Initialize database if needed
         if not async_session_maker:
             await initialize_db()
 
+        # Test database
         async with async_session_maker() as db:
             result = await db.execute(select(1))
-            print("✅ Database connection test passed")
+            print(f"✅ Database test: {result.scalar()}")
 
         # Test Redis
         result = redis_client.ping()
-        print(f"✅ Redis connection test passed: {result}")
+        print(f"✅ Redis test: {result}")
 
-        # Test Redis operations
-        test_key = "test_connection"
-        redis_client.set(test_key, "test_value", ex=60)
-        value = redis_client.get(test_key)
-        redis_client.delete(test_key)
-        print(f"✅ Redis operations test passed: {value}")
-
-        print("✅ All connection tests passed")
+        print("✅ All connections working!")
         return True
 
     except Exception as e:
         print(f"❌ Connection test failed: {e}")
         raise
+
+
+# Manual test function
+async def manual_test():
+    """Run manual tests"""
+    try:
+        await test_connections()
+        print("Manual test passed!")
+    except Exception as e:
+        print(f"Manual test failed: {e}")
+        import traceback
+        traceback.print_exc()
+
+

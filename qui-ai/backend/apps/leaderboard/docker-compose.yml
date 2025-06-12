@@ -8,8 +8,11 @@ services:
       dockerfile: Dockerfile
     container_name: leaderboard-api
     ports:
-      - "8000:8000"
+      - "8005:8005"  # Fixed port mapping to match your requirement
     environment:
+      # Application Configuration
+      - PORT=8005
+      
       # Database Configuration (Supabase)
       - DATABASE_URL=${DATABASE_URL}
       - DB_HOST=${DB_HOST}
@@ -27,7 +30,7 @@ services:
       - REDIS_URL=${REDIS_URL}
 
       # Celery Configuration
-      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-${REDIS_URL}}
 
       # Application Configuration
       - TRACKING_SERVICE_URL=${TRACKING_SERVICE_URL}
@@ -42,7 +45,7 @@ services:
       - leaderboard-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -69,7 +72,7 @@ services:
       - REDIS_USERNAME=${REDIS_USERNAME:-default}
       - REDIS_SSL=${REDIS_SSL:-false}
       - REDIS_URL=${REDIS_URL}
-      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-${REDIS_URL}}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
       - ./logs:/app/logs
@@ -99,7 +102,7 @@ services:
       timeout: 10s
       retries: 3
 
-  # Nginx (Optional - for production)
+  # Nginx (Optional - for production reverse proxy)
   nginx:
     image: nginx:alpine
     container_name: leaderboard-nginx

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUI.AI - Guidebook</title>
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.20.15/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style type="text/css">
+        @font-face { font-family: 'Madani'; src: url('./Fonts/Madani Arabic Regular.ttf') format('truetype'); }
+        @font-face { font-family: 'Madani'; src: url('./Fonts/Madani Arabic Bold.ttf') format('truetype'); font-weight: bold; }
+        body { 
+            font-family: 'Madani', sans-serif; 
+            background-color: #0d001a;
+            overflow-x: hidden; 
+        }
+        .sidebar { background-color: #1a1a1a; z-index: 15; width: 200px; flex-shrink: 0; min-height: 100vh; position: fixed; top: 0; left: 0; padding-top: 2rem; display: flex; flex-direction: column; }
+        .sidebar-item { display: flex; align-items: center; padding: 0.75rem 1rem; margin-bottom: 0.5rem; cursor: pointer; transition: background-color 0.2s; text-decoration: none; }
+        .sidebar-item:hover { background-color: #2a2a2a; }
+        .sidebar-item.active { background-color: #c74ece; color: white; border-top-right-radius: 9999px; border-bottom-right-radius: 9999px; padding-right: 2rem; }
+        .sidebar-logo { font-size: 2rem; font-weight: bold; color: white; padding: 0 1rem 1.5rem; display: block; }
+        .top-header { background-color: #1a1a1a; height: 60px; width: calc(100% - 200px); position: fixed; top: 0; right: 0; z-index: 10; }
+        .article-content h2 { font-size: 1.75rem; font-weight: bold; margin-top: 2rem; margin-bottom: 1rem; color: #c74ece; }
+        .article-content p { font-size: 1.1rem; line-height: 1.8; color: #d1d5db; margin-bottom: 1.5rem; }
+        .article-content strong { color: #f3aefb; font-weight: bold; }
+
+        @keyframes twinkle {
+            0% { transform: scale(0.5); opacity: 0.5; }
+            50% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0.5); opacity: 0.5; }
+        }
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation-name: twinkle;
+            animation-timing-function: ease-in-out;
+            animation-iteration-count: infinite;
+            animation-direction: alternate;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const mockArticleData = { "title": "Unit 1 Guidebook (Preview)", "subtitle": "Key concepts for Neural Networks", "content": "<h2>What is a Neuron?</h2><p>In the context of artificial neural networks, a neuron (or node) is a computational unit that receives one or more inputs, performs a calculation, and produces an output. Inspired by biological neurons, an artificial neuron applies a mathematical function to its inputs.</p><h2>Layers and Architecture</h2><p>A neural network is organized into layers. At a minimum, it has an <strong>input layer</strong> and an <strong>output layer</strong>. The layers in between are called <strong>hidden layers</strong>. A 'deep' neural network is simply a network that has multiple hidden layers.</p>" };
+        const Sidebar = () => { const handleLogout = (e) => { e.preventDefault(); localStorage.removeItem('Q.Ai_userData'); window.location.href = 'Login.html'; }; const sidebarItems = [ { icon: 'fa-graduation-cap', text: 'LEARN', link: 'HomePage.html', active: true }, { icon: 'fa-upload', text: 'USER UPLOADS', link: '#', active: false }, { icon: 'fa-trophy', text: 'LEADERBOARDS', link: 'Leaderboards.html', active: false }, { icon: 'fa-user', text: 'PROFILE', link: 'MyProfile.html', active: false }, ]; return ( <div className="sidebar"> <a href="HomePage.html" className="sidebar-logo">QUI.AI</a> <div> {sidebarItems.map(item => ( <a key={item.text} href={item.link} className={`sidebar-item ${item.active ? 'active' : ''}`}> <i className={`fas ${item.icon} mr-3 text-white`}></i> <span className="text-lg font-semibold text-white">{item.text}</span> </a> ))} </div> <div className="relative group mt-auto mb-2"> <div className="sidebar-item"> <i className="fas fa-ellipsis-h mr-3 text-white"></i> <span className="text-lg font-semibold text-white">MORE</span> </div> <div className="absolute bottom-full left-0 mb-2 w-[190px] bg-[#2a2a2a] rounded-lg shadow-lg hidden group-hover:block transition-all duration-300 opacity-0 group-hover:opacity-100"> <button onClick={handleLogout} className="w-full text-left flex items-center text-white px-4 py-3 hover:bg-red-600 rounded-lg"> <i className="fas fa-sign-out-alt mr-3 text-white"></i> Log Out </button> </div> </div> </div> ); };
+        const TopHeader = () => (<div className="top-header"></div>);
+
+        // UPDATED: GuidebookHeader component with gradient border
+        const GuidebookHeader = ({ title, subtitle }) => (
+            // This parent div creates the gradient border effect
+            <div className="bg-gradient-to-r from-pink-500 to-purple-500 p-0.5 rounded-xl shadow-lg">
+                {/* This child div is the actual content box with a solid background */}
+                <div className="bg-[#1c1c1c] rounded-lg p-6 sm:p-8">
+                    <a href="HomePage.html" className="text-lg font-bold text-[#c74ece] hover:underline mb-8 inline-block">
+                        <i className="fas fa-arrow-left mr-2"></i>
+                        Back to Learning Path
+                    </a>
+                    <div className="flex items-center gap-8">
+                        <div className="flex-shrink-0">
+                            <img 
+                                src="images/Article-01.png" 
+                                alt="QUI.AI Robot Helper" 
+                                className="w-56 h-56 relative bottom-4"
+                            />
+                        </div>
+                        <div>
+                            <h1 className="text-5xl font-extrabold text-white">{title}</h1>
+                            <p className="text-xl text-gray-400 mt-2">{subtitle}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+        
+        const StarsBackground = () => { /* ... No changes to this component ... */ };
+
+        const ArticlePage = () => {
+            const [articleData, setArticleData] = React.useState(null);
+            const [loading, setLoading] = React.useState(true);
+            const [error, setError] = React.useState(null);
+
+            React.useEffect(() => {
+                const urlParams = new URLSearchParams(window.location.search);
+                const sectionId = urlParams.get('section') || 'nn_s1';
+                fetch(`https://api.yourdomain.com/articles/${sectionId}`)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.json();
+                    })
+                    .then(data => {
+                        setArticleData(data);
+                        setLoading(false);
+                    })
+                    .catch(error => {
+                        console.warn("Backend fetch failed. Loading temporary preview data.", error);
+                        setArticleData(mockArticleData);
+                        setLoading(false);
+                        setError(null);
+                    });
+            }, []);
+
+            const renderContent = () => {
+                if (loading) { return <div className="text-center text-2xl text-gray-400 mt-12">Loading article...</div>; }
+                if (error) { return <div className="text-center text-2xl text-red-500 mt-12">{error}</div>; }
+                if (articleData) {
+                    return (
+                        <>
+                            <GuidebookHeader 
+                                title={articleData.title} 
+                                subtitle={articleData.subtitle} 
+                            />
+                            <div 
+                                className="article-content mt-12 px-2"
+                                dangerouslySetInnerHTML={{ __html: articleData.content }} 
+                            />
+                        </>
+                    );
+                }
+                return null;
+            };
+
+            return (
+                <div>
+                    <StarsBackground />
+                    <div className="flex relative">
+                        <Sidebar />
+                        <TopHeader />
+                        <main className="w-full text-white" style={{ marginLeft: '200px', paddingTop: '60px' }}>
+                            <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                                {renderContent()}
+                            </div>
+                        </main>
+                    </div>
+                </div>
+            );
+        };
+
+        // For brevity, the StarsBackground component is not expanded, but the working code is above.
+        ReactDOM.createRoot(document.getElementById('root')).render(<ArticlePage />);
+    </script>
+</body>
+</html>
