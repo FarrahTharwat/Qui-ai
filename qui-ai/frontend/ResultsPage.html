@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Generated Content - QUI.AI</title>
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.20.15/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style type="text/css">
+        @font-face {
+            font-family: 'Madani';
+            src: url('./Fonts/Madani Arabic Regular.ttf') format('truetype');
+        }
+
+        @font-face {
+            font-family: 'Madani';
+            src: url('./Fonts/Madani Arabic Bold.ttf') format('truetype');
+            font-weight: bold;
+        }
+
+        body {
+            font-family: 'Madani', sans-serif;
+            background-color: #0d001a;
+            color: white;
+        }
+
+        .sidebar {
+            background-color: #1a1a1a;
+            z-index: 15;
+            width: 200px;
+            flex-shrink: 0;
+            min-height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding-top: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            text-decoration: none;
+        }
+
+        .sidebar-item:hover {
+            background-color: #2a2a2a;
+        }
+
+        .sidebar-item.active {
+            background-color: #c74ece;
+            color: white;
+            border-top-right-radius: 9999px;
+            border-bottom-right-radius: 9999px;
+            padding-right: 2rem;
+        }
+
+        .sidebar-logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            padding: 0 1rem 1.5rem;
+            display: block;
+        }
+
+        .top-header {
+            background-color: #1a1a1a;
+            height: 60px;
+            width: calc(100% - 200px);
+            position: fixed;
+            top: 0;
+            right: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 2rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            color: white;
+            gap: 1.5rem;
+        }
+
+        .header-item {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+        }
+
+        .header-item span {
+            font-weight: bold;
+            margin-left: 0.5rem;
+            color: white;
+        }
+
+        .dropdown-content {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            right: 0;
+            background-color: #1c1c1c;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            min-width: 250px;
+            padding: 0;
+            z-index: 20;
+            display: none;
+            flex-direction: column;
+            white-space: nowrap;
+        }
+
+        .header-item:hover .dropdown-content {
+            display: flex;
+        }
+
+        .tab-button {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .flashcard-inner {
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+
+        .flashcard.is-flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-front,
+        .flashcard-back {
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+        }
+
+        .flashcard-back {
+            transform: rotateY(180deg);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 0.25rem;
+            right: 0.25rem;
+            background-color: red;
+            border-radius: 50%;
+            width: 0.6rem;
+            height: 0.6rem;
+            display: block;
+        }
+
+        .notification-item {
+            padding: 1rem;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-bottom: 1px solid #333;
+        }
+
+        .notification-item:hover {
+            background-color: #2a2a2a;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const Sidebar = () => { const handleLogout = (e) => { e.preventDefault(); localStorage.removeItem('Q.Ai_userData'); window.location.href = 'Login.html'; }; const sidebarItems = [{ icon: 'fa-graduation-cap', text: 'LEARN', link: 'HomePage.html', active: false }, { icon: 'fa-upload', text: 'USER UPLOADS', link: 'UserUploadPage.html', active: true }, { icon: 'fa-trophy', text: 'LEADERBOARDS', link: 'Leaderboards.html', active: false }, { icon: 'fa-user', text: 'PROFILE', link: 'MyProfile.html', active: false },]; return (<div className="sidebar"> <a href="HomePage.html" className="sidebar-logo">QUI.AI</a> <div> {sidebarItems.map(item => (<a key={item.text} href={item.link} className={`sidebar-item ${item.active ? 'active' : ''}`}> <i className={`fas ${item.icon} mr-3 text-white`}></i> <span className="text-lg font-semibold">{item.text}</span> </a>))} </div> <div className="relative group mt-auto mb-2"> <div className="sidebar-item"> <i className="fas fa-ellipsis-h mr-3 text-white"></i> <span className="text-lg font-semibold">MORE</span> </div> <div className="absolute bottom-full left-0 mb-2 w-[190px] bg-[#2a2a2a] rounded-lg shadow-lg hidden group-hover:block"> <button onClick={handleLogout} className="w-full text-left flex items-center text-white px-4 py-3 hover:bg-red-600 rounded-lg"> <i className="fas fa-sign-out-alt mr-3 text-white"></i> Log Out </button> </div> </div> </div>); };
+        const TopHeader = ({ userData, onCourseChange }) => { const [showNotifications, setShowNotifications] = React.useState(false); const courses = [{ id: 1, name: "Computer Vision", icon: "fa-eye" }, { id: 2, name: "Cloud", icon: "fa-cloud" }, { id: 3, name: "Deep Learning", icon: "fa-layer-group" }, { id: 4, name: "Machine Learning", icon: "fa-cogs" }, { id: 5, name: "NLP", icon: "fa-comment-dots" }, { id: 6, name: "Neural Networks", icon: "fa-brain" }, { id: 7, name: "Robotics", icon: "fa-robot" },]; return (<div className="top-header"> <div className="header-item"> <i className="fas fa-fire text-orange-400"></i> <span>{userData?.stats?.dayStreak}</span> </div> <div className="header-item"> <i className="fas fa-heart text-red-500"></i> <span>{userData?.stats?.lives}</span> </div> <div className="header-item group"> <i className="fas fa-flag text-white"></i> <span>{userData?.currentCourse}</span> <div className="dropdown-content group-hover:flex" style={{ padding: '0.5rem' }}> {courses.map(course => (<div key={course.id} onClick={() => onCourseChange(course.name)} className={`dropdown-item ${course.name === userData?.currentCourse ? 'active-course' : ''}`}> <i className={`fas ${course.icon} mr-3 text-white`}></i>{course.name} </div>))} </div> </div> <div className="header-item" onClick={() => setShowNotifications(!showNotifications)}> <i className="fas fa-bell text-white"></i> {userData?.notifications?.length > 0 && <span className="notification-badge"></span>} <div className={`dropdown-content ${showNotifications ? 'flex' : 'hidden'}`} style={{ padding: '0' }} onClick={e => e.stopPropagation()}> {userData?.notifications?.length > 0 ? userData.notifications.map(n => <a href={n.link} key={n.id} className="notification-item">{n.message}</a>) : <div className="p-4 text-gray-400">No new notifications</div>} </div> </div> </div>); };
+
+        const SummaryView = ({ content }) => (<div className="p-8 bg-[#161625] rounded-b-2xl"> <h2 className="text-3xl font-bold text-purple-300 mb-4">Summary</h2> <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{content}</p> </div>);
+        const RephraseView = ({ content }) => (<div className="p-8 bg-[#161625] rounded-b-2xl"> <h2 className="text-3xl font-bold text-pink-300 mb-4">Rephrased Text</h2> <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{content}</p> </div>);
+        const FlashCardsView = ({ cards }) => { const [currentIndex, setCurrentIndex] = React.useState(0); const [isFlipped, setIsFlipped] = React.useState(false); const goToNext = () => { setIsFlipped(false); setTimeout(() => setCurrentIndex(prev => (prev + 1) % cards.length), 150); }; const goToPrev = () => { setIsFlipped(false); setTimeout(() => setCurrentIndex(prev => (prev - 1 + cards.length) % cards.length), 150); }; return (<div className="p-8 bg-[#161625] rounded-b-2xl flex flex-col items-center"> <p className="font-bold text-indigo-300 mb-4">Flashcard {currentIndex + 1} of {cards.length}</p> <div onClick={() => setIsFlipped(!isFlipped)} className={`flashcard w-full max-w-xl h-80 perspective-1000 cursor-pointer ${isFlipped ? 'is-flipped' : ''}`}> <div className="flashcard-inner relative w-full h-full"> <div className="flashcard-front absolute w-full h-full bg-[#1c1c1c] rounded-2xl flex items-center justify-center p-6 text-center border-2 border-indigo-500"><h3 className="text-2xl font-bold">{cards[currentIndex].front}</h3></div> <div className="flashcard-back absolute w-full h-full bg-[#1c1c1c] rounded-2xl flex items-center justify-center p-6 text-center border-2 border-indigo-500"><p>{cards[currentIndex].back}</p></div> </div> </div> <div className="flex gap-4 mt-6"> <button onClick={goToPrev} className="bg-gray-700 p-3 rounded-full hover:bg-gray-600"><i className="fas fa-arrow-left"></i></button> <button onClick={goToNext} className="bg-gray-700 p-3 rounded-full hover:bg-gray-600"><i className="fas fa-arrow-right"></i></button> </div> </div>); };
+        const McqView = ({ questions }) => { const [currentQ, setCurrentQ] = React.useState(0); const [selectedAnswer, setSelectedAnswer] = React.useState(null); const [isCorrect, setIsCorrect] = React.useState(null); const handleCheck = () => { setIsCorrect(selectedAnswer === questions[currentQ].correctAnswer); }; const handleNext = () => { setIsCorrect(null); setSelectedAnswer(null); setCurrentQ(prev => (prev + 1) % questions.length); }; if (!questions || questions.length === 0) return <div>No questions available.</div>; const question = questions[currentQ]; return (<div className="p-8 bg-[#161625] rounded-b-2xl"> <h2 className="text-3xl font-bold text-teal-400 mb-6 text-center">{question.questionText}</h2> <div className="max-w-xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4"> {question.options.map((opt, i) => (<button key={i} onClick={() => isCorrect === null && setSelectedAnswer(opt)} className={`p-4 font-semibold border-2 rounded-lg transition-all ${isCorrect !== null && opt === question.correctAnswer ? 'bg-green-500 border-green-400' : ''} ${isCorrect !== null && opt !== question.correctAnswer && opt === selectedAnswer ? 'bg-red-500 border-red-400' : ''} ${isCorrect === null && selectedAnswer === opt ? 'bg-purple-600 border-purple-500' : 'border-gray-600 hover:border-purple-500'}`}> {opt} </button>))} </div> <div className="mt-8 text-center"> {isCorrect === null ? (<button onClick={handleCheck} disabled={!selectedAnswer} className="bg-pink-600 font-bold py-3 px-12 rounded-lg disabled:bg-gray-600">Check</button>) : (<button onClick={handleNext} className="bg-blue-600 font-bold py-3 px-12 rounded-lg">Next Question</button>)} </div> </div>); };
+
+        const ResultsPage = () => {
+            const [userData, setUserData] = React.useState(null);
+            const [resultData, setResultData] = React.useState(null);
+            const [activeTab, setActiveTab] = React.useState(null);
+            const [loading, setLoading] = React.useState(true);
+            const loadUserData = () => { const storedUserData = localStorage.getItem('Q.Ai_userData'); if (storedUserData) { setUserData(JSON.parse(storedUserData)); } }
+            React.useEffect(() => { loadUserData(); window.addEventListener('storage', loadUserData); const mockData = { originalFileName: "Deep Learning for Beginners.pdf", availableServices: ['summary', 'rephrase', 'flashcards', 'mcq'], content: { summary: "This document provides a comprehensive introduction to the foundational concepts of deep learning. It begins by defining an artificial neuron as a core computational unit that processes weighted inputs through an activation function. The text then elaborates on the hierarchical structure of neural networks, distinguishing between input, hidden, and output layers, and clarifies that the term 'deep' refers to the presence of multiple hidden layers. The learning mechanism, primarily driven by backpropagation, is explained as a process of minimizing error by adjusting weights based on a loss function's output. Finally, the document touches upon common challenges in model training, such as overfitting, where the model performs exceptionally well on training data but poorly on new, unseen data.", rephrase: "This paper is a simple guide to the main ideas of deep learning. Think of a 'neuron' as a tiny calculator that takes in information, does some math, and gives an answer. These neurons are organized into lines, or 'layers.' There's a layer for the starting info (input), a layer for the final answer (output), and layers in the middle (hidden). A 'deep' network just has a lot of these hidden layers. The document also mentions how these networks learn by adjusting their calculations to get closer to the right answer, a process called backpropagation. A common problem is when the network memorizes the examples instead of learning general patterns, which is called overfitting.", flashcards: [{ front: "What is a Neuron?", back: "A computational unit in a neural network that receives inputs, performs a calculation, and produces an output." }, { front: "What are the 3 main layer types?", back: "Input Layer, Hidden Layer(s), and Output Layer." }, { front: "What makes a network 'Deep'?", back: "Having multiple hidden layers between the input and output layers." }, { front: "What is Backpropagation?", back: "The primary algorithm used to train neural networks by minimizing error through weight adjustments." }, { front: "Define Overfitting.", back: "A modeling error that occurs when a function is too closely fit to a limited set of data points, performing poorly on new data." }], mcq: [{ id: 1, questionText: "What is a key component of a neural network?", options: ["CPU", "Neuron", "RAM", "SSD"], correctAnswer: "Neuron" }, { id: 2, questionText: "Overfitting occurs when a model:", options: ["Performs well on new data", "Is too simple", "Learns the training data too well", "Has low variance"], correctAnswer: "Learns the training data too well" }, { id: 3, questionText: "The layers between the input and output layers are called:", options: ["Side Layers", "Deep Layers", "Hidden Layers", "Central Layers"], correctAnswer: "Hidden Layers" }, { id: 4, questionText: "Which algorithm is primarily used for training neural networks?", options: ["K-Means Clustering", "Linear Regression", "Random Forest", "Backpropagation"], correctAnswer: "Backpropagation" }] } }; setResultData(mockData); setActiveTab(mockData.availableServices[0]); setLoading(false); return () => window.removeEventListener('storage', loadUserData); }, []);
+            const handleCourseChange = (newCourseName) => { setUserData(prevData => { const updatedData = { ...prevData, currentCourse: newCourseName }; localStorage.setItem('Q.Ai_userData', JSON.stringify(updatedData)); return updatedData; }); };
+            const renderActiveView = () => { if (!resultData) return null; switch (activeTab) { case 'summary': return <SummaryView content={resultData.content.summary} />; case 'rephrase': return <RephraseView content={resultData.content.rephrase} />; case 'flashcards': return <FlashCardsView cards={resultData.content.flashcards} />; case 'mcq': return <McqView questions={resultData.content.mcq} />; default: return null; } };
+            const TABS = { summary: { label: "Summary", icon: "fa-align-left" }, rephrase: { label: "Rephrase", icon: "fa-pen-nib" }, flashcards: { label: "Flash Cards", icon: "fa-layer-group" }, mcq: { label: "MCQ", icon: "fa-list-check" }, };
+            if (loading || !resultData) return (<div className="flex"><Sidebar /><main className="pl-[200px]" style={{ paddingTop: '60px' }}>Loading Results...</main></div>);
+            return (
+                <div className="text-white min-h-screen">
+                    <Sidebar />
+                    <TopHeader userData={userData} onCourseChange={handleCourseChange} />
+                    <main className="pl-[200px]" style={{ paddingTop: '60px' }}>
+                        <div className="p-8 sm:p-12">
+                            <h1 className="text-4xl font-bold mb-2">Your Generated Content</h1>
+                            <p className="text-gray-400 mb-8">Results for: <span className="font-semibold text-gray-300">{resultData.originalFileName}</span></p>
+                            <div className="flex border-b-2 border-gray-700">
+                                {resultData.availableServices.map(serviceId => (
+                                    <button key={serviceId} onClick={() => setActiveTab(serviceId)} className={`tab-button flex items-center gap-2 py-3 px-6 font-bold ${activeTab === serviceId ? 'text-pink-400 border-b-2 border-pink-400 -mb-0.5' : 'text-gray-500 hover:text-white'}`}>
+                                        <i className={`fas ${TABS[serviceId].icon}`}></i>
+                                        {TABS[serviceId].label}
+                                    </button>
+                                ))}
+                            </div>
+                            <div> {renderActiveView()} </div>
+                        </div>
+                    </main>
+                </div>
+            );
+        };
+        ReactDOM.createRoot(document.getElementById('root')).render(<ResultsPage />);
+    </script>
+</body>
+
+</html>

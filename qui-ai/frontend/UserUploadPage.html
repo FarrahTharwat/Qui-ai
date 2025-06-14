@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Upload - QUI.AI</title>
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.20.15/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style type="text/css">
+        @font-face {
+            font-family: 'Madani';
+            src: url('./Fonts/Madani Arabic Regular.ttf') format('truetype');
+        }
+
+        @font-face {
+            font-family: 'Madani';
+            src: url('./Fonts/Madani Arabic Bold.ttf') format('truetype');
+            font-weight: bold;
+        }
+
+        body {
+            font-family: 'Madani', sans-serif;
+            background-color: #0d001a;
+            color: white;
+        }
+
+        .service-box-inner {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .sidebar {
+            background-color: #1a1a1a;
+            z-index: 15;
+            width: 200px;
+            flex-shrink: 0;
+            min-height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding-top: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            text-decoration: none;
+        }
+
+        .sidebar-item:hover {
+            background-color: #2a2a2a;
+        }
+
+        .sidebar-item.active {
+            background-color: #c74ece;
+            color: white;
+            border-top-right-radius: 9999px;
+            border-bottom-right-radius: 9999px;
+            padding-right: 2rem;
+        }
+
+        .sidebar-logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            padding: 0 1rem 1.5rem;
+            display: block;
+        }
+
+        .top-header {
+            background-color: #1a1a1a;
+            height: 60px;
+            width: calc(100% - 200px);
+            position: fixed;
+            top: 0;
+            right: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 2rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            color: white;
+            gap: 1.5rem;
+        }
+
+        .header-item {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+        }
+
+        .header-item span {
+            font-weight: bold;
+            margin-left: 0.5rem;
+            color: white;
+        }
+
+        .dropdown-content {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            right: 0;
+            background-color: #1c1c1c;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            min-width: 250px;
+            padding: 0;
+            z-index: 20;
+            display: none;
+            flex-direction: column;
+            white-space: nowrap;
+        }
+
+        .header-item:hover .dropdown-content {
+            display: flex;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-radius: 0.3rem;
+            display: flex;
+            align-items: center;
+        }
+
+        @keyframes twinkle {
+            0% {
+                opacity: 0.2;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+
+            100% {
+                opacity: 0.2;
+            }
+        }
+
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle ease-in-out infinite alternate;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 0.25rem;
+            right: 0.25rem;
+            background-color: red;
+            border-radius: 50%;
+            width: 0.6rem;
+            height: 0.6rem;
+            display: block;
+        }
+
+        .notification-item {
+            padding: 1rem;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-bottom: 1px solid #333;
+        }
+
+        .notification-item:hover {
+            background-color: #2a2a2a;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const Sidebar = () => { const handleLogout = (e) => { e.preventDefault(); localStorage.removeItem('Q.Ai_userData'); window.location.href = 'Login.html'; }; const sidebarItems = [{ icon: 'fa-graduation-cap', text: 'LEARN', link: 'HomePage.html', active: false }, { icon: 'fa-upload', text: 'USER UPLOADS', link: 'UserUploadPage.html', active: true }, { icon: 'fa-trophy', text: 'LEADERBOARDS', link: 'Leaderboards.html', active: false }, { icon: 'fa-user', text: 'PROFILE', link: 'MyProfile.html', active: false },]; return (<div className="sidebar"> <a href="HomePage.html" className="sidebar-logo">QUI.AI</a> <div> {sidebarItems.map(item => (<a key={item.text} href={item.link} className={`sidebar-item ${item.active ? 'active' : ''}`}> <i className={`fas ${item.icon} mr-3 text-white`}></i> <span className="text-lg font-semibold">{item.text}</span> </a>))} </div> <div className="relative group mt-auto mb-2"> <div className="sidebar-item"> <i className="fas fa-ellipsis-h mr-3 text-white"></i> <span className="text-lg font-semibold">MORE</span> </div> <div className="absolute bottom-full left-0 mb-2 w-[190px] bg-[#2a2a2a] rounded-lg shadow-lg hidden group-hover:block"> <button onClick={handleLogout} className="w-full text-left flex items-center text-white px-4 py-3 hover:bg-red-600 rounded-lg"> <i className="fas fa-sign-out-alt mr-3 text-white"></i> Log Out </button> </div> </div> </div>); };
+        const TopHeader = ({ userData, onCourseChange }) => { const [showNotifications, setShowNotifications] = React.useState(false); const courses = [{ id: 1, name: "Computer Vision", icon: "fa-eye" }, { id: 2, name: "Cloud", icon: "fa-cloud" }, { id: 3, name: "Deep Learning", icon: "fa-layer-group" }, { id: 4, name: "Machine Learning", icon: "fa-cogs" }, { id: 5, name: "NLP", icon: "fa-comment-dots" }, { id: 6, name: "Neural Networks", icon: "fa-brain" }, { id: 7, name: "Robotics", icon: "fa-robot" },]; return (<div className="top-header"> <div className="header-item"> <i className="fas fa-fire text-orange-400"></i> <span>{userData?.stats?.dayStreak}</span> </div> <div className="header-item"> <i className="fas fa-heart text-red-500"></i> <span>{userData?.stats?.lives}</span> </div> <div className="header-item group"> <i className="fas fa-flag text-white"></i> <span>{userData?.currentCourse}</span> <div className="dropdown-content group-hover:flex" style={{ padding: '0.5rem' }}> {courses.map(course => (<div key={course.id} onClick={() => onCourseChange(course.name)} className={`dropdown-item ${course.name === userData?.currentCourse ? 'active-course' : ''}`}> <i className={`fas ${course.icon} mr-3 text-white`}></i>{course.name} </div>))} </div> </div> <div className="header-item" onClick={() => setShowNotifications(!showNotifications)}> <i className="fas fa-bell text-white"></i> {userData?.notifications?.length > 0 && <span className="notification-badge"></span>} <div className={`dropdown-content ${showNotifications ? 'flex' : 'hidden'}`} style={{ padding: '0' }} onClick={e => e.stopPropagation()}> {userData?.notifications?.length > 0 ? userData.notifications.map(n => <a href={n.link} key={n.id} className="notification-item">{n.message}</a>) : <div className="p-4 text-gray-400">No new notifications</div>} </div> </div> </div>); };
+        const StarsBackground = () => (<div className="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none"> <span className="star" style={{ width: '2px', height: '2px', top: '10%', left: '15%', animationDuration: '3s' }}></span> <span className="star" style={{ width: '1px', height: '1px', top: '25%', left: '25%', animationDuration: '4s', animationDelay: '1s' }}></span> <span className="star" style={{ width: '3px', height: '3px', top: '5%', left: '50%', animationDuration: '2.5s' }}></span> <span className="star" style={{ width: '1px', height: '1px', top: '40%', left: '65%', animationDuration: '5s', animationDelay: '0.5s' }}></span> <span className="star" style={{ width: '2px', height: '2px', top: '60%', left: '85%', animationDuration: '3.5s' }}></span> <span className="star" style={{ width: '3px', height: '3px', top: '80%', left: '95%', animationDuration: '2s', animationDelay: '1.5s' }}></span> <span className="star" style={{ width: '1px', height: '1px', top: '90%', left: '55%', animationDuration: '4.5s' }}></span> <span className="star" style={{ width: '2px', height: '2px', top: '75%', left: '20%', animationDuration: '3s', animationDelay: '2s' }}></span> </div>);
+        const GradientBorderBox = ({ children, className }) => (<div className={`bg-gradient-to-br from-pink-500 to-purple-500 p-0.5 rounded-2xl ${className}`}> <div className="bg-[#1c1c1c] h-full w-full rounded-[15px] p-8"> {children} </div> </div>);
+
+        // UPDATED: ServiceBox now handles its own border style
+        const ServiceBox = ({ icon, title, description, isSelected, onSelect }) => {
+            const wrapperClasses = isSelected
+                ? "bg-gradient-to-br from-pink-500 to-purple-500 p-0.5 rounded-2xl scale-105"
+                : "bg-[#1c1c1c] border-2 border-gray-700 rounded-2xl p-0.5";
+
+            const innerClasses = isSelected
+                ? "bg-[#1c1c1c] rounded-[15px]"
+                : "";
+
+            return (
+                <div onClick={onSelect} className={`service-box-inner h-full cursor-pointer transition-all duration-300 ${wrapperClasses}`}>
+                    <div className={`h-full w-full p-6 ${innerClasses}`}>
+                        <i className={`fas ${icon} text-3xl mb-3 ${isSelected ? 'text-pink-500' : 'text-gray-400'}`}></i>
+                        <h3 className="text-xl font-bold text-white">{title}</h3>
+                        <p className="text-gray-400 text-sm mt-1">{description}</p>
+                    </div>
+                </div>
+            );
+        };
+
+        const UploadModal = ({ isOpen, onClose }) => { if (!isOpen) return null; return (<div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"> <div className="bg-[#1c1c1c] rounded-2xl p-8 max-w-md w-full text-center border border-purple-500"> <i className="fas fa-check-circle text-6xl text-green-500 mb-4"></i> <h2 className="text-2xl font-bold text-white mb-2">Upload Successful!</h2> <p className="text-gray-300 mb-6">Our AI is processing your document. We will send you a notification as soon as your content is ready.</p> <button onClick={onClose} className="bg-[#c74ece] font-bold text-white px-8 py-3 rounded-lg hover:bg-[#b035dd] transition-colors">OKAY</button> </div> </div>); };
+        const HistoryPanel = ({ history, onClear }) => (<div className="mt-12"> <div className="flex justify-between items-center mb-4"> <h2 className="text-3xl font-bold">Your Upload History</h2> {history && history.length > 0 && (<button onClick={onClear} className="text-sm font-semibold text-gray-400 hover:text-red-500 transition"><i className="fas fa-trash-alt mr-2"></i>Clear History</button>)}</div> <div className="space-y-3"> {history && history.length > 0 ? (history.map(item => (<a href={`ResultsPage.html?id=${item.id}`} key={item.id} className="flex justify-between items-center p-4 bg-[#1c1c1c] rounded-lg hover:bg-gray-800/40 transition border border-gray-700"><div className="flex items-center gap-4"><i className="fas fa-file-alt text-2xl text-purple-400"></i><div><p className="font-bold text-white">{item.fileName}</p><p className="text-sm text-gray-400">{item.date}</p></div></div><i className="fas fa-chevron-right text-gray-500"></i></a>)).reverse()) : (<div className="text-gray-500 text-center py-8 bg-[#1c1c1c] rounded-lg border border-gray-700">You haven't uploaded any documents yet.</div>)} </div> </div>);
+
+        const UserUploadPage = () => {
+            const [userData, setUserData] = React.useState(null);
+            const [uploadHistory, setUploadHistory] = React.useState([]);
+            const [selectedFile, setSelectedFile] = React.useState(null);
+            const [selectedServices, setSelectedServices] = React.useState([]);
+            const [isModalOpen, setIsModalOpen] = React.useState(false);
+            const fileInputRef = React.useRef(null);
+
+            const loadUserData = () => { const storedUserData = localStorage.getItem('Q.Ai_userData'); if (storedUserData) { const parsedData = JSON.parse(storedUserData); setUserData(parsedData); setUploadHistory(parsedData.uploadHistory || []); } };
+            React.useEffect(() => { loadUserData(); window.addEventListener('storage', loadUserData); return () => window.removeEventListener('storage', loadUserData); }, []);
+
+            const handleCourseChange = (newCourseName) => { setUserData(prevData => { const updatedData = { ...prevData, currentCourse: newCourseName }; localStorage.setItem('Q.Ai_userData', JSON.stringify(updatedData)); return updatedData; }); };
+            const handleFileSelect = (event) => { const file = event.target.files[0]; if (file && file.type === 'application/pdf') { setSelectedFile(file); } else { alert('Please select a PDF file.'); } };
+            const toggleService = (serviceId) => { setSelectedServices(prev => prev.includes(serviceId) ? prev.filter(id => id !== serviceId) : [...prev, serviceId]); };
+            const handleSubmit = () => { if (!selectedFile || selectedServices.length === 0) { alert('Please select a file and at least one service.'); return; } setIsModalOpen(true); setTimeout(() => { const currentUserData = JSON.parse(localStorage.getItem('Q.Ai_userData')); const resultId = `sim_${Date.now()}`; const newNotification = { id: Date.now(), message: `Your content for '${selectedFile.name}' is ready!`, link: `ResultsPage.html?id=${resultId}` }; const newHistoryItem = { id: resultId, fileName: selectedFile.name, date: new Date().toLocaleDateString() }; if (!currentUserData.notifications) currentUserData.notifications = []; if (!currentUserData.uploadHistory) currentUserData.uploadHistory = []; currentUserData.notifications.push(newNotification); currentUserData.uploadHistory.push(newHistoryItem); localStorage.setItem('Q.Ai_userData', JSON.stringify(currentUserData)); window.dispatchEvent(new Event('storage')); }, 2000); };
+            const handleClearHistory = () => { if (!window.confirm("Are you sure you want to clear your entire upload history? This cannot be undone.")) { return; } const currentUserData = JSON.parse(localStorage.getItem('Q.Ai_userData')); currentUserData.uploadHistory = []; localStorage.setItem('Q.Ai_userData', JSON.stringify(currentUserData)); setUploadHistory([]); };
+            const closeModal = () => { setIsModalOpen(false); setSelectedFile(null); setSelectedServices([]); };
+            const services = [{ id: 'mcq', icon: 'fa-list-check', title: 'MCQ', description: 'Generate quiz questions' }, { id: 'rephrase', icon: 'fa-pen-nib', title: 'Rephrase', description: 'Simplify complex text' }, { id: 'flashcards', icon: 'fa-layer-group', title: 'Flash Cards', description: 'Create study cards' }, { id: 'summary', icon: 'fa-align-left', title: 'Summarization', description: 'Get a concise summary' },];
+
+            return (
+                <div className="relative min-h-screen">
+                    <StarsBackground />
+                    <Sidebar />
+                    <TopHeader userData={userData} onCourseChange={handleCourseChange} />
+                    <main className="pl-[200px]" style={{ paddingTop: '60px' }}>
+                        <div className="p-8 sm:p-12">
+                            <h1 className="text-4xl font-bold mb-2">User Upload</h1>
+                            <p className="text-gray-400 mb-8">Generate custom learning materials from your own documents.</p>
+
+                            <GradientBorderBox className="mb-8">
+                                <div onClick={() => fileInputRef.current.click()} className="border-2 border-dashed border-gray-600 rounded-xl p-12 text-center cursor-pointer hover:border-purple-500 hover:bg-gray-800/30 transition">
+                                    <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept=".pdf" />
+                                    <i className="fas fa-file-pdf text-5xl text-purple-400 mb-4"></i>
+                                    {selectedFile ? (<> <p className="text-lg font-bold">{selectedFile.name}</p> <p className="text-sm text-gray-400">Click here to choose a different file</p> </>) : (<> <p className="text-lg font-bold">Drag & drop your PDF here</p> <p className="text-sm text-gray-400">or click to browse</p> </>)}
+                                </div>
+                            </GradientBorderBox>
+
+                            <h2 className="text-2xl font-bold mb-4">Choose Services</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                {services.map(service => (
+                                    <ServiceBox
+                                        key={service.id}
+                                        {...service}
+                                        isSelected={selectedServices.includes(service.id)}
+                                        onSelect={() => toggleService(service.id)}
+                                    />
+                                ))}
+                            </div>
+
+                            <div className="mt-8 text-right">
+                                <button onClick={handleSubmit} disabled={!selectedFile || selectedServices.length === 0} className="bg-pink-600 text-white font-bold py-3 px-10 rounded-lg disabled:bg-gray-600 disabled:cursor-not-allowed hover:enabled:bg-pink-700 transition"> Generate </button>
+                            </div>
+
+                            <HistoryPanel history={uploadHistory} onClear={handleClearHistory} />
+                        </div>
+                    </main>
+                    <UploadModal isOpen={isModalOpen} onClose={closeModal} />
+                </div>
+            );
+        };
+        ReactDOM.createRoot(document.getElementById('root')).render(<UserUploadPage />);
+    </script>
+</body>
+
+</html>
