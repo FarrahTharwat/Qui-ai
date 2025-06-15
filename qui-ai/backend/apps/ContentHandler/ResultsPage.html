@@ -40,89 +40,924 @@
     <div id="root"></div>
     <script type="text/babel">
         // --- SHARED COMPONENTS ---
-        const Sidebar = () => { const handleLogout = (e) => { e.preventDefault(); localStorage.removeItem('Q.Ai_userData'); window.location.href = 'Login.html'; }; const sidebarItems = [ { icon: 'fa-graduation-cap', text: 'LEARN', link: 'HomePage.html', active: false }, { icon: 'fa-upload', text: 'USER UPLOADS', link: 'UserUploadPage.html', active: true }, { icon: 'fa-trophy', text: 'LEADERBOARDS', link: 'Leaderboards.html', active: false }, { icon: 'fa-user', text: 'PROFILE', link: 'MyProfile.html', active: false },]; return (<div className="sidebar"> <a href="HomePage.html" className="sidebar-logo">QUI.AI</a> <div> {sidebarItems.map(item => (<a key={item.text} href={item.link} className={`sidebar-item ${item.active ? 'active' : ''}`}> <i className={`fas ${item.icon} mr-3 text-white`}></i> <span className="text-lg font-semibold">{item.text}</span> </a>))} </div> <div className="relative group mt-auto mb-2"> <div className="sidebar-item"> <i className="fas fa-ellipsis-h mr-3 text-white"></i> <span className="text-lg font-semibold">MORE</span> </div> <div className="absolute bottom-full left-0 mb-2 w-[190px] bg-[#2a2a2a] rounded-lg shadow-lg hidden group-hover:block"> <button onClick={handleLogout} className="w-full text-left flex items-center text-white px-4 py-3 hover:bg-red-600 rounded-lg"> <i className="fas fa-sign-out-alt mr-3 text-white"></i> Log Out </button> </div> </div> </div>); };
-        const TopHeader = ({ userData, onCourseChange }) => { const [showNotifications, setShowNotifications] = React.useState(false); const courses = [ { id: 1, name: "Computer Vision", icon: "fa-eye" }, { id: 2, name: "Cloud", icon: "fa-cloud" }, { id: 3, name: "Deep Learning", icon: "fa-layer-group" }, { id: 4, name: "Machine Learning", icon: "fa-cogs" }, { id: 5, name: "NLP", icon: "fa-comment-dots" }, { id: 6, name: "Neural Networks", icon: "fa-brain" }, { id: 7, name: "Robotics", icon: "fa-robot" }, ]; return ( <div className="top-header"> <div className="header-item"> <i className="fas fa-fire text-orange-400"></i> <span>{userData?.stats?.dayStreak}</span> </div> <div className="header-item"> <i className="fas fa-heart text-red-500"></i> <span>{userData?.stats?.lives}</span> </div> <div className="header-item group"> <i className="fas fa-flag text-white"></i> <span>{userData?.currentCourse}</span> <div className="dropdown-content group-hover:flex"> {courses.map(course => ( <div key={course.id} onClick={() => onCourseChange(course.name)} className={`dropdown-item ${course.name === userData?.currentCourse ? 'active-course' : ''}`}> <i className={`fas ${course.icon} mr-3 text-white`}></i>{course.name} </div> ))} </div> </div> <div className="header-item" onClick={() => setShowNotifications(!showNotifications)}> <i className="fas fa-bell text-white"></i> {userData?.notifications?.length > 0 && <span className="notification-badge"></span>} <div className={`dropdown-content notification-dropdown ${showNotifications ? 'flex' : 'hidden'}`} onClick={e => e.stopPropagation()}> {userData?.notifications?.length > 0 ? userData.notifications.map(n => <a href={n.link} key={n.id} className="notification-item">{n.message}</a>) : <div className="p-4 text-gray-400">No new notifications</div>} </div> </div> </div> ); };
-        
-        // --- RESULT VIEW COMPONENTS ---
-        const SummaryView = ({ content }) => ( <div className="p-8 bg-[#161625] rounded-b-2xl"> <h2 className="text-3xl font-bold text-purple-300 mb-4">Summary</h2> <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{content}</p> </div> );
-        const RephraseView = ({ content }) => ( <div className="p-8 bg-[#161625] rounded-b-2xl"> <h2 className="text-3xl font-bold text-pink-300 mb-4">Rephrased Text</h2> <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{content}</p> </div> );
-        const FlashCardsView = ({ cards }) => { const [currentIndex, setCurrentIndex] = React.useState(0); const [isFlipped, setIsFlipped] = React.useState(false); const goToNext = () => { setIsFlipped(false); setTimeout(() => setCurrentIndex(prev => (prev + 1) % cards.length), 150); }; const goToPrev = () => { setIsFlipped(false); setTimeout(() => setCurrentIndex(prev => (prev - 1 + cards.length) % cards.length), 150); }; return ( <div className="p-8 bg-[#161625] rounded-b-2xl flex flex-col items-center"> <p className="font-bold text-indigo-300 mb-4">Flashcard {currentIndex + 1} of {cards.length}</p> <div onClick={() => setIsFlipped(!isFlipped)} className={`flashcard w-full max-w-xl h-80 perspective-1000 cursor-pointer ${isFlipped ? 'is-flipped' : ''}`}> <div className="flashcard-inner relative w-full h-full"> <div className="flashcard-front absolute w-full h-full bg-[#1c1c1c] rounded-2xl flex items-center justify-center p-6 text-center border-2 border-indigo-500"><h3 className="text-2xl font-bold">{cards[currentIndex].front}</h3></div> <div className="flashcard-back absolute w-full h-full bg-[#1c1c1c] rounded-2xl flex items-center justify-center p-6 text-center border-2 border-indigo-500"><p>{cards[currentIndex].back}</p></div> </div> </div> <div className="flex gap-4 mt-6"> <button onClick={goToPrev} className="bg-gray-700 p-3 rounded-full hover:bg-gray-600"><i className="fas fa-arrow-left"></i></button> <button onClick={goToNext} className="bg-gray-700 p-3 rounded-full hover:bg-gray-600"><i className="fas fa-arrow-right"></i></button> </div> </div> ); };
-        const McqView = ({ questions }) => {
-            const [currentQ, setCurrentQ] = React.useState(0);
-            const [selectedAnswer, setSelectedAnswer] = React.useState(null);
-            const [isCorrect, setIsCorrect] = React.useState(null);
+        const Sidebar = () => {
+            const handleLogout = (e) => {
+                e.preventDefault();
+                localStorage.removeItem('Q.Ai_userData');
+                window.location.href = 'Login.html';
+            };
 
-            const handleCheck = () => { setIsCorrect(selectedAnswer === questions[currentQ].correctAnswer); };
-            const handleNext = () => { setIsCorrect(null); setSelectedAnswer(null); setCurrentQ(prev => (prev + 1) % questions.length); };
-            
-            if(!questions || questions.length === 0) return <div>No questions available.</div>
-            const question = questions[currentQ];
+            const sidebarItems = [
+                { icon: 'fa-graduation-cap', text: 'LEARN', link: 'HomePage.html', active: false },
+                { icon: 'fa-upload', text: 'USER UPLOADS', link: 'UserUploadPage.html', active: true },
+                { icon: 'fa-trophy', text: 'LEADERBOARDS', link: 'Leaderboards.html', active: false },
+                { icon: 'fa-user', text: 'PROFILE', link: 'MyProfile.html', active: false },
+            ];
 
             return (
-                <div className="p-8 bg-[#161625] rounded-b-2xl">
-                    <h2 className="text-3xl font-bold text-teal-400 mb-6 text-center">{question.questionText}</h2>
-                    <div className="max-w-xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {question.options.map((opt, i) => (
-                            <button key={i} onClick={() => isCorrect === null && setSelectedAnswer(opt)} className={`p-4 font-semibold border-2 rounded-lg transition-all 
-                                ${isCorrect !== null && opt === question.correctAnswer ? 'bg-green-500 border-green-400' : ''}
-                                ${isCorrect !== null && opt !== question.correctAnswer && opt === selectedAnswer ? 'bg-red-500 border-red-400' : ''}
-                                ${isCorrect === null && selectedAnswer === opt ? 'bg-purple-600 border-purple-500' : 'border-gray-600 hover:border-purple-500'}`}>
-                                {opt}
-                            </button>
+                <div className="sidebar">
+                    <a href="HomePage.html" className="sidebar-logo">QUI.AI</a>
+                    <div>
+                        {sidebarItems.map(item => (
+                            <a key={item.text} href={item.link} className={`sidebar-item ${item.active ? 'active' : ''}`}>
+                                <i className={`fas ${item.icon} mr-3 text-white`}></i>
+                                <span className="text-lg font-semibold">{item.text}</span>
+                            </a>
                         ))}
                     </div>
-                    <div className="mt-8 text-center">
-                        {isCorrect === null ? (
-                            <button onClick={handleCheck} disabled={!selectedAnswer} className="bg-pink-600 font-bold py-3 px-12 rounded-lg disabled:bg-gray-600">Check</button>
-                        ) : (
-                            <button onClick={handleNext} className="bg-blue-600 font-bold py-3 px-12 rounded-lg">Next</button>
-                        )}
+                    <div className="relative group mt-auto mb-2">
+                        <div className="sidebar-item">
+                            <i className="fas fa-ellipsis-h mr-3 text-white"></i>
+                            <span className="text-lg font-semibold">MORE</span>
+                        </div>
+                        <div className="absolute bottom-full left-0 mb-2 w-[190px] bg-[#2a2a2a] rounded-lg shadow-lg hidden group-hover:block">
+                            <button onClick={handleLogout} className="w-full text-left flex items-center text-white px-4 py-3 hover:bg-red-600 rounded-lg">
+                                <i className="fas fa-sign-out-alt mr-3 text-white"></i>
+                                Log Out
+                            </button>
+                        </div>
                     </div>
                 </div>
             );
         };
-        
+
+        const TopHeader = ({ userData, onCourseChange }) => {
+            const [showNotifications, setShowNotifications] = React.useState(false);
+
+            const courses = [
+                { id: 1, name: "Computer Vision", icon: "fa-eye" },
+                { id: 2, name: "Cloud", icon: "fa-cloud" },
+                { id: 3, name: "Deep Learning", icon: "fa-layer-group" },
+                { id: 4, name: "Machine Learning", icon: "fa-cogs" },
+                { id: 5, name: "NLP", icon: "fa-comment-dots" },
+                { id: 6, name: "Neural Networks", icon: "fa-brain" },
+                { id: 7, name: "Robotics", icon: "fa-robot" },
+            ];
+
+            return (
+                <div className="top-header">
+                    <div className="header-item">
+                        <i className="fas fa-fire text-orange-400"></i>
+                        <span>{userData?.stats?.dayStreak || 0}</span>
+                    </div>
+                    <div className="header-item">
+                        <i className="fas fa-heart text-red-500"></i>
+                        <span>{userData?.stats?.lives || 0}</span>
+                    </div>
+                    <div className="header-item group">
+                        <i className="fas fa-flag text-white"></i>
+                        <span>{userData?.currentCourse || 'Select Course'}</span>
+                        <div className="dropdown-content group-hover:flex">
+                            {courses.map(course => (
+                                <div key={course.id} onClick={() => onCourseChange(course.name)} className={`dropdown-item ${course.name === userData?.currentCourse ? 'active-course' : ''}`}>
+                                    <i className={`fas ${course.icon} mr-3 text-white`}></i>{course.name}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="header-item" onClick={() => setShowNotifications(!showNotifications)}>
+                        <i className="fas fa-bell text-white"></i>
+                        {userData?.notifications?.length > 0 && <span className="notification-badge"></span>}
+                        <div className={`dropdown-content notification-dropdown ${showNotifications ? 'flex' : 'hidden'}`} onClick={e => e.stopPropagation()}>
+                            {userData?.notifications?.length > 0 ?
+                                userData.notifications.map(n =>
+                                    <a href={n.link} key={n.id} className="notification-item">{n.message}</a>
+                                ) :
+                                <div className="p-4 text-gray-400">No new notifications</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+      // --- COMPLETE FRONTEND WORKFLOW ---
+const API_BASE_URL = 'http://localhost:8000/api/v1';
+
+// Check session status and get progress updates
+const checkSessionStatus = async (sessionId) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/status/${sessionId}`);
+        if (!response.ok) {
+            throw new Error(`Failed to check status: ${response.statusText}`);
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error checking session status:', error);
+        return null;
+    }
+};
+
+// Wait for document cleaning to complete
+const waitForCleaning = async (sessionId, maxWaitTime = 120000, checkInterval = 3000) => {
+    const startTime = Date.now();
+
+    return new Promise((resolve, reject) => {
+        const checkStatus = async () => {
+            try {
+                const statusData = await checkSessionStatus(sessionId);
+
+                if (!statusData) {
+                    throw new Error('Failed to get session status');
+                }
+
+                console.log(`Session ${sessionId} status:`, statusData.status);
+
+                // Update UI with current status
+                if (setStatus) {
+                    setStatus(`${statusData.message} (${statusData.progress || 0}%)`);
+                }
+
+                // Check if cleaning is complete
+                if (statusData.status === 'cleaned') {
+                    resolve(statusData);
+                    return;
+                }
+
+                // Check for errors
+                if (statusData.status === 'failed') {
+                    reject(new Error(`Processing failed: ${statusData.error || 'Unknown error'}`));
+                    return;
+                }
+
+                // Check timeout
+                if (Date.now() - startTime > maxWaitTime) {
+                    reject(new Error('Document processing timeout'));
+                    return;
+                }
+
+                // Continue checking
+                setTimeout(checkStatus, checkInterval);
+            } catch (error) {
+                reject(error);
+            }
+        };
+
+        checkStatus();
+    });
+};
+
+// Wait for MCQ generation to complete
+const waitForMCQGeneration = async (sessionId, maxWaitTime = 180000, checkInterval = 5000) => {
+    const startTime = Date.now();
+
+    return new Promise((resolve, reject) => {
+        const checkStatus = async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/mcq/status/${sessionId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to check MCQ status');
+                }
+
+                const statusData = await response.json();
+                console.log(`MCQ Generation status:`, statusData.status);
+
+                // Update UI
+                if (setStatus) {
+                    setStatus(`${statusData.message} (${statusData.progress || 0}%)`);
+                }
+
+                // Check if MCQ generation is complete
+                if (statusData.status === 'mcqs_ready') {
+                    // Fetch the actual MCQs
+                    const mcqResponse = await fetch(`${API_BASE_URL}/mcq/results/${sessionId}`);
+                    if (mcqResponse.ok) {
+                        const mcqData = await mcqResponse.json();
+                        resolve(mcqData);
+                    } else {
+                        reject(new Error('Failed to fetch MCQ results'));
+                    }
+                    return;
+                }
+
+                // Check for errors
+                if (statusData.status === 'mcq_generation_failed') {
+                    reject(new Error(`MCQ generation failed: ${statusData.error || 'Unknown error'}`));
+                    return;
+                }
+
+                // Check timeout
+                if (Date.now() - startTime > maxWaitTime) {
+                    reject(new Error('MCQ generation timeout'));
+                    return;
+                }
+
+                // Continue checking
+                setTimeout(checkStatus, checkInterval);
+            } catch (error) {
+                reject(error);
+            }
+        };
+
+        checkStatus();
+    });
+};
+
+// Generate MCQs after cleaning is complete
+const generateMCQsFromSession = async (sessionId) => {
+    try {
+        console.log('Starting MCQ generation for session:', sessionId);
+
+        // Wait for cleaning to complete first
+        setStatus('Waiting for document cleaning...');
+        await waitForCleaning(sessionId);
+
+        console.log('Cleaning complete, starting MCQ generation...');
+        setStatus('Starting MCQ generation...');
+
+        // Start MCQ generation
+        const response = await fetch(`${API_BASE_URL}/mcq/generate/${sessionId}`, {
+            method: 'POST'
+        });
+
+        if (!response.ok) {
+            throw new Error(`MCQ generation failed: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('MCQ generation started:', data);
+
+        // Wait for MCQ generation to complete
+        const mcqResults = await waitForMCQGeneration(sessionId);
+        return mcqResults;
+
+    } catch (error) {
+        console.error('Error in MCQ generation process:', error);
+        throw error;
+    }
+};
+
+// Complete workflow: Upload -> Clean -> Generate MCQs
+const handleCompleteWorkflow = async (file) => {
+    try {
+        setLoading(true);
+        setStatus('Uploading document...');
+        setMCQs([]);
+
+        // 1. Upload file
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const uploadResponse = await fetch(`${API_BASE_URL}/upload`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!uploadResponse.ok) {
+            const errorData = await uploadResponse.json();
+            throw new Error(errorData.message || 'Upload failed');
+        }
+
+        const uploadData = await uploadResponse.json();
+        const sessionId = uploadData.session_id;
+
+        console.log('Upload complete, session ID:', sessionId);
+        setStatus('Upload complete, processing document...');
+
+        // 2. Generate MCQs (this will wait for cleaning automatically)
+        const mcqResults = await generateMCQsFromSession(sessionId);
+
+        if (mcqResults.success && mcqResults.mcqs) {
+            setMCQs(mcqResults.mcqs);
+            setStatus(`MCQs generated successfully! (${mcqResults.mcqs.length} questions)`);
+
+            // Display statistics if available
+            if (mcqResults.statistics) {
+                console.log('MCQ Statistics:', mcqResults.statistics);
+            }
+        } else {
+            throw new Error('No MCQs generated');
+        }
+
+    } catch (error) {
+        setStatus('Error: ' + error.message);
+        console.error('Complete workflow failed:', error);
+    } finally {
+        setLoading(false);
+    }
+};
+
+// Enhanced MCQ display component
+const MCQDisplay = ({ mcqs }) => {
+    if (!mcqs || mcqs.length === 0) {
+        return <div>No MCQs generated yet.</div>;
+    }
+
+    return (
+        <div className="mcq-container">
+            <h3>Generated MCQs ({mcqs.length} questions)</h3>
+            {mcqs.map((mcq, index) => (
+                <div key={index} className="mcq-item" style={{
+                    border: '1px solid #ddd',
+                    padding: '15px',
+                    margin: '10px 0',
+                    borderRadius: '5px'
+                }}>
+                    <h4>Question {index + 1}:</h4>
+                    <p><strong>{mcq.question}</strong></p>
+
+                    <div className="options">
+                        <h5>Options:</h5>
+                        <ul>
+                            {mcq.options && mcq.options.map((option, optIndex) => (
+                                <li
+                                    key={optIndex}
+                                    style={{
+                                        color: option === mcq.correct_answer ? 'green' : 'black',
+                                        fontWeight: option === mcq.correct_answer ? 'bold' : 'normal'
+                                    }}
+                                >
+                                    {String.fromCharCode(65 + optIndex)}. {option}
+                                    {option === mcq.correct_answer && ' ✓'}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    <div className="metadata" style={{ fontSize: '0.9em', color: '#666', marginTop: '10px' }}>
+                        <span>Difficulty: {mcq.difficulty || 'Medium'} | </span>
+                        <span>Confidence: {(mcq.confidence * 100).toFixed(1)}%</span>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+};
+
+// Usage in React component:
+const DocumentProcessor = () => {
+    const [loading, setLoading] = useState(false);
+    const [status, setStatus] = useState('');
+    const [mcqs, setMCQs] = useState([]);
+    const [file, setFile] = useState(null);
+
+    const handleFileChange = (event) => {
+        setFile(event.target.files[0]);
+    };
+
+    const handleSubmit = async () => {
+        if (!file) {
+            alert('Please select a file first');
+            return;
+        }
+
+        await handleCompleteWorkflow(file);
+    };
+
+    return (
+        <div>
+            <div>
+                <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={handleFileChange}
+                    disabled={loading}
+                />
+                <button
+                    onClick={handleSubmit}
+                    disabled={loading || !file}
+                >
+                    {loading ? 'Processing...' : 'Upload and Generate MCQs'}
+                </button>
+            </div>
+
+            {status && (
+                <div style={{ margin: '10px 0', padding: '10px', backgroundColor: '#f0f0f0' }}>
+                    Status: {status}
+                </div>
+            )}
+
+            {loading && (
+                <div style={{ margin: '10px 0' }}>
+                    <div>Processing... Please wait.</div>
+                </div>
+            )}
+
+            <MCQDisplay mcqs={mcqs} />
+        </div>
+    );
+};
+        const fetchSummaryResults = async (sessionId) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/document/${sessionId}`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch summary results: ${response.statusText}`);
+        }
+        const data = await response.json();
+
+        // Access the combined_summary from the document object
+        return data.success && data.document ? data.document.combined_summary : '';
+    } catch (error) {
+        console.error('Error fetching summary results:', error);
+        return '';
+    }
+};
+
+        const fetchRephraseResults = async (sessionId) => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/rephrase/results/${sessionId}`);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch rephrase results: ${response.statusText}`);
+                }
+                const data = await response.json();
+                return data.success ? data.rephrased_text : '';
+            } catch (error) {
+                console.error('Error fetching rephrase results:', error);
+                return '';
+            }
+        };
+
+        const fetchFlashcardResults = async (sessionId) => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/flashcards/results/${sessionId}`);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch flashcard results: ${response.statusText}`);
+                }
+                const data = await response.json();
+                return data.success ? data.flashcards : [];
+            } catch (error) {
+                console.error('Error fetching flashcard results:', error);
+                return [];
+            }
+        };
+
+        // --- UTILITY FUNCTIONS ---
+        const getUserData = () => {
+            return JSON.parse(localStorage.getItem('Q.Ai_userData') || '{}');
+        };
+
+        const getUploadRecordById = (sessionId) => {
+            const userData = getUserData();
+            if (userData.uploadHistory) {
+                return userData.uploadHistory.find(item => item.id === sessionId);
+            }
+            return null;
+        };
+
+        const getURLParameter = (name) => {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        };
+
+        // --- RESULT VIEW COMPONENTS ---
+        const SummaryView = ({ content }) => (
+            <div className="p-8 bg-[#161625] rounded-b-2xl">
+                <h2 className="text-3xl font-bold text-purple-300 mb-4">Summary</h2>
+                {content ? (
+                    <div className="text-gray-300 leading-relaxed whitespace-pre-wrap">{content}</div>
+                ) : (
+                    <div className="text-gray-500 text-center py-8">No summary available</div>
+                )}
+            </div>
+        );
+
+        const RephraseView = ({ content }) => (
+            <div className="p-8 bg-[#161625] rounded-b-2xl">
+                <h2 className="text-3xl font-bold text-pink-300 mb-4">Rephrased Text</h2>
+                {content ? (
+                    <div className="text-gray-300 leading-relaxed whitespace-pre-wrap">{content}</div>
+                ) : (
+                    <div className="text-gray-500 text-center py-8">No rephrased text available</div>
+                )}
+            </div>
+        );
+
+        const FlashCardsView = ({ cards }) => {
+            const [currentIndex, setCurrentIndex] = React.useState(0);
+            const [isFlipped, setIsFlipped] = React.useState(false);
+
+            if (!cards || cards.length === 0) {
+                return (
+                    <div className="p-8 bg-[#161625] rounded-b-2xl">
+                        <h2 className="text-3xl font-bold text-indigo-300 mb-4">Flash Cards</h2>
+                        <div className="text-gray-500 text-center py-8">No flashcards available</div>
+                    </div>
+                );
+            }
+
+            const goToNext = () => {
+                setIsFlipped(false);
+                setTimeout(() => setCurrentIndex(prev => (prev + 1) % cards.length), 150);
+            };
+
+            const goToPrev = () => {
+                setIsFlipped(false);
+                setTimeout(() => setCurrentIndex(prev => (prev - 1 + cards.length) % cards.length), 150);
+            };
+
+            return (
+                <div className="p-8 bg-[#161625] rounded-b-2xl flex flex-col items-center">
+                    <p className="font-bold text-indigo-300 mb-4">Flashcard {currentIndex + 1} of {cards.length}</p>
+                    <div onClick={() => setIsFlipped(!isFlipped)} className={`flashcard w-full max-w-xl h-80 perspective-1000 cursor-pointer ${isFlipped ? 'is-flipped' : ''}`}>
+                        <div className="flashcard-inner relative w-full h-full">
+                            <div className="flashcard-front absolute w-full h-full bg-[#1c1c1c] rounded-2xl flex items-center justify-center p-6 text-center border-2 border-indigo-500">
+                                <h3 className="text-2xl font-bold">{cards[currentIndex].front || cards[currentIndex].question}</h3>
+                            </div>
+                            <div className="flashcard-back absolute w-full h-full bg-[#1c1c1c] rounded-2xl flex items-center justify-center p-6 text-center border-2 border-indigo-500">
+                                <p className="text-lg">{cards[currentIndex].back || cards[currentIndex].answer}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex gap-4 mt-6">
+                        <button onClick={goToPrev} className="bg-gray-700 p-3 rounded-full hover:bg-gray-600 transition-colors">
+                            <i className="fas fa-arrow-left"></i>
+                        </button>
+                        <button onClick={goToNext} className="bg-gray-700 p-3 rounded-full hover:bg-gray-600 transition-colors">
+                            <i className="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const McqView = ({ questions }) => {
+            const [currentQ, setCurrentQ] = React.useState(0);
+            const [selectedAnswer, setSelectedAnswer] = React.useState(null);
+            const [isCorrect, setIsCorrect] = React.useState(null);
+            const [userAnswers, setUserAnswers] = React.useState({});
+            const [showResults, setShowResults] = React.useState(false);
+
+            if (!questions || questions.length === 0) {
+                return (
+                    <div className="p-8 bg-[#161625] rounded-b-2xl">
+                        <h2 className="text-3xl font-bold text-teal-400 mb-6 text-center">Multiple Choice Questions</h2>
+                        <div className="text-gray-500 text-center py-8">No questions available</div>
+                    </div>
+                );
+            }
+
+            const handleCheck = () => {
+                const correct = selectedAnswer === questions[currentQ].correct_answer;
+                setIsCorrect(correct);
+                setUserAnswers(prev => ({
+                    ...prev,
+                    [currentQ]: {
+                        selected: selectedAnswer,
+                        correct: correct
+                    }
+                }));
+            };
+
+            const handleNext = () => {
+                if (currentQ < questions.length - 1) {
+                    setIsCorrect(null);
+                    setSelectedAnswer(null);
+                    setCurrentQ(prev => prev + 1);
+                } else {
+                    setShowResults(true);
+                }
+            };
+
+            const handlePrevious = () => {
+                if (currentQ > 0) {
+                    setIsCorrect(null);
+                    setSelectedAnswer(userAnswers[currentQ - 1]?.selected || null);
+                    setCurrentQ(prev => prev - 1);
+                }
+            };
+
+            const resetQuiz = () => {
+                setCurrentQ(0);
+                setSelectedAnswer(null);
+                setIsCorrect(null);
+                setUserAnswers({});
+                setShowResults(false);
+            };
+
+            if (showResults) {
+                const correctCount = Object.values(userAnswers).filter(answer => answer.correct).length;
+                const percentage = Math.round((correctCount / questions.length) * 100);
+
+                return (
+                    <div className="p-8 bg-[#161625] rounded-b-2xl text-center">
+                        <h2 className="text-3xl font-bold text-teal-400 mb-6">Quiz Results</h2>
+                        <div className="mb-6">
+                            <div className="text-6xl font-bold mb-4">
+                                <span className={percentage >= 70 ? 'text-green-400' : percentage >= 50 ? 'text-yellow-400' : 'text-red-400'}>
+                                    {percentage}%
+                                </span>
+                            </div>
+                            <p className="text-xl text-gray-300">
+                                You got {correctCount} out of {questions.length} questions correct
+                            </p>
+                        </div>
+                        <button
+                            onClick={resetQuiz}
+                            className="bg-teal-600 hover:bg-teal-700 font-bold py-3 px-8 rounded-lg transition-colors"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                );
+            }
+
+            const question = questions[currentQ];
+            const options = question.options || [question.option_a, question.option_b, question.option_c, question.option_d].filter(Boolean);
+
+            return (
+                <div className="p-8 bg-[#161625] rounded-b-2xl">
+                    <div className="text-center mb-6">
+                        <span className="text-sm text-gray-400">Question {currentQ + 1} of {questions.length}</span>
+                    </div>
+                    <h2 className="text-3xl font-bold text-teal-400 mb-6 text-center">
+                        {question.question || question.question_text}
+                    </h2>
+                    <div className="max-w-2xl mx-auto grid grid-cols-1 gap-4">
+                        {options.map((opt, i) => (
+                            <button
+                                key={i}
+                                onClick={() => isCorrect === null && setSelectedAnswer(opt)}
+                                disabled={isCorrect !== null}
+                                className={`p-4 font-semibold border-2 rounded-lg transition-all text-left
+                                    ${isCorrect !== null && opt === question.correct_answer ? 'bg-green-500 border-green-400 text-white' : ''}
+                                    ${isCorrect !== null && opt !== question.correct_answer && opt === selectedAnswer ? 'bg-red-500 border-red-400 text-white' : ''}
+                                    ${isCorrect === null && selectedAnswer === opt ? 'bg-purple-600 border-purple-500 text-white' : ''}
+                                    ${isCorrect === null && selectedAnswer !== opt ? 'border-gray-600 hover:border-purple-500 bg-gray-800 hover:bg-gray-700' : ''}
+                                    ${isCorrect !== null ? 'cursor-not-allowed' : 'cursor-pointer'}
+                                `}
+                            >
+                                <span className="font-bold mr-2">{String.fromCharCode(65 + i)}.</span>
+                                {opt}
+                            </button>
+                        ))}
+                    </div>
+
+                    {question.explanation && isCorrect !== null && (
+                        <div className="mt-6 p-4 bg-blue-900/30 border border-blue-500 rounded-lg max-w-2xl mx-auto">
+                            <h4 className="font-bold text-blue-300 mb-2">Explanation:</h4>
+                            <p className="text-gray-300">{question.explanation}</p>
+                        </div>
+                    )}
+
+                    <div className="mt-8 flex justify-between max-w-2xl mx-auto">
+                        <button
+                            onClick={handlePrevious}
+                            disabled={currentQ === 0}
+                            className="bg-gray-600 font-bold py-3 px-6 rounded-lg disabled:bg-gray-800 disabled:cursor-not-allowed hover:enabled:bg-gray-500 transition-colors"
+                        >
+                            Previous
+                        </button>
+
+                        <div className="flex gap-4">
+                            {isCorrect === null ? (
+                                <button
+                                    onClick={handleCheck}
+                                    disabled={!selectedAnswer}
+                                    className="bg-pink-600 font-bold py-3 px-8 rounded-lg disabled:bg-gray-600 disabled:cursor-not-allowed hover:enabled:bg-pink-700 transition-colors"
+                                >
+                                    Check Answer
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={handleNext}
+                                    className="bg-blue-600 font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors"
+                                >
+                                    {currentQ < questions.length - 1 ? 'Next Question' : 'View Results'}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         // --- MAIN PAGE COMPONENT ---
         const ResultsPage = () => {
             const [userData, setUserData] = React.useState(null);
             const [resultData, setResultData] = React.useState(null);
             const [activeTab, setActiveTab] = React.useState(null);
             const [loading, setLoading] = React.useState(true);
-            
+            const [error, setError] = React.useState(null);
+
             React.useEffect(() => {
-                const storedUserData = localStorage.getItem('Q.Ai_userData');
-                if (storedUserData) { setUserData(JSON.parse(storedUserData)); }
+                const loadData = async () => {
+                    try {
+                        // Load user data
+                        const storedUserData = getUserData();
+                        if (storedUserData) {
+                            setUserData(storedUserData);
+                        }
 
-                const mockData = { originalFileName: "Deep_Learning_Basics.pdf", availableServices: ['summary', 'rephrase', 'flashcards', 'mcq'], content: { summary: "This document provides a foundational overview of deep learning, covering key concepts such as neural networks, layers (input, hidden, output), and the role of activation functions. It explains that a 'deep' network has multiple hidden layers and briefly touches upon the learning process.", rephrase: "This paper gives you the simple basics of deep learning. It talks about how neural networks are made of layers, like input, hidden, and output layers. It also discusses special functions called activation functions. A 'deep' network just means it has many hidden layers. The document also mentions how these networks learn.", flashcards: [ { front: "What is a Neuron?", back: "A computational unit in a neural network that receives inputs, performs a calculation, and produces an output." }, { front: "What are the 3 main layer types?", back: "Input Layer, Hidden Layer(s), and Output Layer." }, { front: "What makes a network 'Deep'?", back: "Having multiple hidden layers between the input and output layers." }, ], mcq: [ { id: 1, questionText: "What is a key component of a neural network?", options: ["CPU", "Neuron", "RAM", "SSD"], correctAnswer: "Neuron" }, { id: 2, questionText: "Overfitting occurs when a model:", options: ["Performs well on new data", "Is too simple", "Learns the training data too well", "Has low variance"], correctAnswer: "Learns the training data too well" } ] } }; 
-                setResultData(mockData); 
-                setActiveTab(mockData.availableServices[0]); 
-                setLoading(false);
+                        // Get session ID from URL
+                        const sessionId = getURLParameter('id');
+                        if (!sessionId) {
+                            setError('No session ID provided');
+                            setLoading(false);
+                            return;
+                        }
+
+                        // Get upload record
+                        const uploadRecord = getUploadRecordById(sessionId);
+                        if (!uploadRecord) {
+                            setError('Upload record not found');
+                            setLoading(false);
+                            return;
+                        }
+
+                        // Determine available services based on upload record
+                        const availableServices = [];
+                        const content = {};
+
+                        if (uploadRecord.serviceResults) {
+                            for (const [service, result] of Object.entries(uploadRecord.serviceResults)) {
+                                if (result.status === 'completed') {
+                                    availableServices.push(service);
+                                }
+                            }
+                        }
+
+                        // Fetch results for completed services
+                        const fetchPromises = availableServices.map(async (service) => {
+                            try {
+                                switch (service) {
+                                    case 'mcq':
+                                        content[service] = await fetchMCQResults(sessionId);
+                                        break;
+                                    case 'summary':
+                                        content[service] = await fetchSummaryResults(sessionId);
+                                        break;
+                                    case 'rephrase':
+                                        content[service] = await fetchRephraseResults(sessionId);
+                                        break;
+                                    case 'flashcards':
+                                        content[service] = await fetchFlashcardResults(sessionId);
+                                        break;
+                                    default:
+                                        console.warn(`Unknown service: ${service}`);
+                                }
+                            } catch (error) {
+                                console.error(`Error fetching ${service} results:`, error);
+                                // Keep the service in available list but with empty content
+                                content[service] = service === 'mcq' || service === 'flashcards' ? [] : '';
+                            }
+                        });
+
+                        await Promise.all(fetchPromises);
+
+                        // Set result data
+                        const resultData = {
+                            sessionId: sessionId,
+                            originalFileName: uploadRecord.fileName,
+                            availableServices: availableServices,
+                            content: content
+                        };
+
+                        setResultData(resultData);
+
+                        // Set active tab to first available service
+                        if (availableServices.length > 0) {
+                            setActiveTab(availableServices[0]);
+                        }
+
+                    } catch (error) {
+                        console.error('Error loading results:', error);
+                        setError('Failed to load results');
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+
+                loadData();
             }, []);
-            
-            const handleCourseChange = (newCourseName) => { setUserData(prevData => { const updatedData = { ...prevData, currentCourse: newCourseName }; localStorage.setItem('Q.Ai_userData', JSON.stringify(updatedData)); return updatedData; }); };
-            const renderActiveView = () => { if (!resultData) return null; switch (activeTab) { case 'summary': return <SummaryView content={resultData.content.summary} />; case 'rephrase': return <RephraseView content={resultData.content.rephrase} />; case 'flashcards': return <FlashCardsView cards={resultData.content.flashcards} />; case 'mcq': return <McqView questions={resultData.content.mcq} />; default: return null; } };
-            const TABS = { summary: { label: "Summary", icon: "fa-align-left" }, rephrase: { label: "Rephrase", icon: "fa-pen-nib" }, flashcards: { label: "Flash Cards", icon: "fa-layer-group" }, mcq: { label: "MCQ", icon: "fa-list-check" }, };
 
-            if (loading || !resultData) return <div className="pl-[200px]" style={{ paddingTop: '60px' }}>Loading Results...</div>;
+            const handleCourseChange = (newCourseName) => {
+                setUserData(prevData => {
+                    const updatedData = { ...prevData, currentCourse: newCourseName };
+                    localStorage.setItem('Q.Ai_userData', JSON.stringify(updatedData));
+                    return updatedData;
+                });
+            };
+
+            const renderActiveView = () => {
+                if (!resultData || !activeTab) return null;
+
+                switch (activeTab) {
+                    case 'summary':
+                        return <SummaryView content={resultData.content.summary} />;
+                    case 'rephrase':
+                        return <RephraseView content={resultData.content.rephrase} />;
+                    case 'flashcards':
+                        return <FlashCardsView cards={resultData.content.flashcards} />;
+                    case 'mcq':
+                        return <McqView questions={resultData.content.mcq} />;
+                    default:
+                        return <div className="p-8 bg-[#161625] rounded-b-2xl text-center text-gray-500">Content not available</div>;
+                }
+            };
+
+            const TABS = {
+                summary: { label: "Summary", icon: "fa-align-left" },
+                rephrase: { label: "Rephrase", icon: "fa-pen-nib" },
+                flashcards: { label: "Flash Cards", icon: "fa-layer-group" },
+                mcq: { label: "MCQ", icon: "fa-list-check" },
+            };
+
+            if (loading) {
+                return (
+                    <div className="text-white min-h-screen">
+                        <Sidebar />
+                        <TopHeader userData={userData} onCourseChange={handleCourseChange}/>
+                        <main className="pl-[200px]" style={{ paddingTop: '60px' }}>
+                            <div className="p-8 sm:p-12 flex items-center justify-center">
+                                <div className="text-center">
+                                    <i className="fas fa-spinner fa-spin text-4xl text-purple-400 mb-4"></i>
+                                    <p className="text-xl">Loading your results...</p>
+                                </div>
+                            </div>
+                        </main>
+                    </div>
+                );
+            }
+
+            if (error) {
+                return (
+                    <div className="text-white min-h-screen">
+                        <Sidebar />
+                        <TopHeader userData={userData} onCourseChange={handleCourseChange}/>
+                        <main className="pl-[200px]" style={{ paddingTop: '60px' }}>
+                            <div className="p-8 sm:p-12">
+                                <div className="text-center">
+                                    <i className="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+                                    <h2 className="text-2xl font-bold mb-2">Error Loading Results</h2>
+                                    <p className="text-gray-400 mb-6">{error}</p>
+                                    <a href="UserUploadPage.html" className="bg-purple-600 hover:bg-purple-700 font-bold py-3 px-6 rounded-lg transition-colors">
+                                        Back to Uploads
+                                    </a>
+                                </div>
+                            </div>
+                        </main>
+                    </div>
+                );
+            }
+
+            if (!resultData || resultData.availableServices.length === 0) {
+                return (
+                    <div className="text-white min-h-screen">
+                        <Sidebar />
+                        <TopHeader userData={userData} onCourseChange={handleCourseChange}/>
+                        <main className="pl-[200px]" style={{ paddingTop: '60px' }}>
+                            <div className="p-8 sm:p-12">
+                                <div className="text-center">
+                                    <i className="fas fa-file-alt text-4xl text-gray-400 mb-4"></i>
+                                    <h2 className="text-2xl font-bold mb-2">No Results Available</h2>
+                                    <p className="text-gray-400 mb-6">
+                                        {resultData ? 'No completed services found for this upload.' : 'Results not found.'}
+                                    </p>
+                                    <a href="UserUploadPage.html" className="bg-purple-600 hover:bg-purple-700 font-bold py-3 px-6 rounded-lg transition-colors">
+                                        Back to Uploads
+                                    </a>
+                                </div>
+                            </div>
+                        </main>
+                    </div>
+                );
+            }
 
             return (
-                 <div className="text-white min-h-screen">
+                <div className="text-white min-h-screen">
                     <Sidebar />
                     <TopHeader userData={userData} onCourseChange={handleCourseChange}/>
                     <main className="pl-[200px]" style={{ paddingTop: '60px' }}>
                         <div className="p-8 sm:p-12">
-                            <h1 className="text-4xl font-bold mb-2">Your Generated Content</h1>
-                            <p className="text-gray-400 mb-8">Results for: <span className="font-semibold text-gray-300">{resultData.originalFileName}</span></p>
-                            
-                            <div className="flex border-b-2 border-gray-700">
-                                {resultData.availableServices.map(serviceId => (
-                                    <button key={serviceId} onClick={() => setActiveTab(serviceId)} className={`tab-button flex items-center gap-2 py-3 px-6 font-bold ${activeTab === serviceId ? 'text-pink-400 border-b-2 border-pink-400 -mb-0.5' : 'text-gray-500 hover:text-white'}`}>
-                                        <i className={`fas ${TABS[serviceId].icon}`}></i>
-                                        {TABS[serviceId].label}
-                                    </button>
-                                ))}
+                            <div className="flex items-center justify-between mb-8">
+                                <div>
+                                    <h1 className="text-4xl font-bold mb-2">Your Generated Content</h1>
+                                    <p className="text-gray-400">
+                                        Results for: <span className="font-semibold text-gray-300">{resultData.originalFileName}</span>
+                                    </p>
+                                </div>
+                                <a
+                                    href="UserUploadPage.html"
+                                    className="text-purple-400 hover:text-purple-300 transition-colors"
+                                >
+                                    <i className="fas fa-arrow-left mr-2"></i>
+                                    Back to Uploads
+                                </a>
                             </div>
-                            <div> {renderActiveView()} </div>
+
+                            <div className="bg-[#1c1c1c] rounded-2xl overflow-hidden">
+                                <div className="flex border-b border-gray-700">
+                                    {resultData.availableServices.map(serviceId => (
+                                        <button
+                                            key={serviceId}
+                                            onClick={() => setActiveTab(serviceId)}
+                                            className={`tab-button flex items-center gap-2 py-4 px-6 font-bold transition-all ${
+                                                activeTab === serviceId
+                                                    ? 'text-pink-400 bg-[#161625] border-b-2 border-pink-400'
+                                                    : 'text-gray-500 hover:text-white hover:bg-gray-800/50'
+                                            }`}
+                                        >
+                                            <i className={`fas ${TABS[serviceId].icon}`}></i>
+                                            {TABS[serviceId].label}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <div className="min-h-[400px]">
+                                    {renderActiveView()}
+                                </div>
+                            </div>
                         </div>
                     </main>
                 </div>

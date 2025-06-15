@@ -1,0 +1,226 @@
+{
+    "session_id": "a9b310e8-a93c-443c-970b-1c0683c08570",
+    "cleaned_text": "\n\n\n\n",
+    "polished_text": "",
+    "polished_pages": {
+        "page_1": "",
+        "page_2": "",
+        "page_3": "",
+        "page_4": "",
+        "page_5": ""
+    },
+    "pdf_path": null,
+    "timestamp": "2025-06-15T01:23:49.811515",
+    "metadata": {
+        "format": "PDF 1.7",
+        "title": "Clever Algorithms - Nature-Inspired Pro...ing Recipes (2011) J. Brownlee (1).pdf",
+        "author": "Medo _3",
+        "subject": "",
+        "keywords": "",
+        "creator": "",
+        "producer": "Microsoft: Print To PDF",
+        "creationDate": "D:20250321152825+02'00'",
+        "modDate": "D:20250321152825+02'00'",
+        "trapped": "",
+        "encryption": null,
+        "page_count": 5
+    },
+    "image_analysis": {
+        "page_2_img_1.png": {
+            "ocr": "",
+            "caption": "a detailed photo of a math formula or data graph, with a black and white background",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "math",
+            "latex": ""
+        },
+        "page_3_img_1.png": {
+            "ocr": "",
+            "caption": "a detailed photo of a math formula or data graph, with a black and white background",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "math",
+            "latex": ""
+        },
+        "page_3_img_2.png": {
+            "ocr": "",
+            "caption": "a detailed photo of a math formula or data graph, with a black and white background",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "math",
+            "latex": ""
+        },
+        "page_3_img_3.png": {
+            "ocr": "",
+            "caption": "a photo of an illustration or diagram of a black and white symbol",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "illustration",
+            "latex": null
+        },
+        "page_3_img_4.png": {
+            "ocr": "",
+            "caption": "a detailed photo of a math formula or data graph, with a cross at the top",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "math",
+            "latex": ""
+        },
+        "page_3_img_5.png": {
+            "ocr": "",
+            "caption": "a photo of an illustration or diagram of a pixel",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "illustration",
+            "latex": null
+        },
+        "page_3_img_6.png": {
+            "ocr": "",
+            "caption": "a detailed photo of a math formula or data graph, with a black and white background",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "math",
+            "latex": ""
+        },
+        "page_3_img_7.png": {
+            "ocr": "",
+            "caption": "a photo of an illustration or diagram of a computer",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "illustration",
+            "latex": null
+        },
+        "page_3_img_8.png": {
+            "ocr": "",
+            "caption": "a detailed photo of a math formula or data graph anchor symbol",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "math",
+            "latex": ""
+        },
+        "page_3_img_9.png": {
+            "ocr": "",
+            "caption": "a photo of an illustration or diagram of a computer",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "illustration",
+            "latex": null
+        },
+        "page_4_img_1.png": {
+            "ocr": "",
+            "caption": "a detailed photo of a math formula or data graph, with a black and white background",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "math",
+            "latex": ""
+        },
+        "page_4_img_10.png": {
+            "ocr": "",
+            "caption": "a detailed photo of a math formula or data graph symbol",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "math",
+            "latex": ""
+        },
+        "page_4_img_11.png": {
+            "ocr": "",
+            "caption": "a photo of an illustration or diagram of a cross stitch",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "illustration",
+            "latex": null
+        },
+        "page_4_img_12.png": {
+            "ocr": "",
+            "caption": "a detailed photo of a math formula or data graph, with a number of 1 and a number",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "math",
+            "latex": ""
+        },
+        "page_4_img_13.png": {
+            "ocr": "",
+            "caption": "a photo of an illustration or diagram of a computer",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "illustration",
+            "latex": null
+        },
+        "page_4_img_14.png": {
+            "ocr": "",
+            "caption": "a photo of an illustration or diagram of a black and white symbol",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "illustration",
+            "latex": null
+        },
+        "page_4_img_15.png": {
+            "ocr": "",
+            "caption": "a detailed photo of a math formula or data graph, with a cross at the top",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "math",
+            "latex": ""
+        },
+        "page_4_img_16.png": {
+            "ocr": "",
+            "caption": "a photo of an illustration or diagram of a computer",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "illustration",
+            "latex": null
+        },
+        "page_4_img_17.png": {
+            "ocr": "",
+            "caption": "a detailed photo of a math formula or data graph anchor symbol",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "math",
+            "latex": ""
+        },
+        "page_4_img_18.png": {
+            "ocr": "",
+            "caption": "a photo of an illustration or diagram of a computer",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "illustration",
+            "latex": null
+        },
+        "page_4_img_2.png": {
+            "ocr": "",
+            "caption": "a photo of an illustration or diagram of a pixel",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "illustration",
+            "latex": null
+        },
+        "page_4_img_3.png": {
+            "ocr": "",
+            "caption": "a detailed photo of a math formula or data graph, with a black and white background",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "math",
+            "latex": ""
+        },
+        "page_4_img_4.png": {
+            "ocr": "",
+            "caption": "a detailed photo of a math formula or data graph, with a black and white background",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "math",
+            "latex": ""
+        },
+        "page_4_img_5.png": {
+            "ocr": "",
+            "caption": "a photo of an illustration or diagram of a cross",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "illustration",
+            "latex": null
+        },
+        "page_4_img_6.png": {
+            "ocr": "",
+            "caption": "a photo of an illustration or diagram of a pixel",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "illustration",
+            "latex": null
+        },
+        "page_4_img_7.png": {
+            "ocr": "",
+            "caption": "a detailed photo of a math formula or data graph, with a cross at the top",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "math",
+            "latex": ""
+        },
+        "page_4_img_8.png": {
+            "ocr": "",
+            "caption": "a photo of an illustration or diagram of a cross",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "illustration",
+            "latex": null
+        },
+        "page_4_img_9.png": {
+            "ocr": "",
+            "caption": "a photo of an illustration or diagram of a pixel",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "illustration",
+            "latex": null
+        }
+    }
+}

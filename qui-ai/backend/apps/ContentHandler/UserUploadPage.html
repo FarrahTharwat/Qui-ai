@@ -33,129 +33,888 @@
         .notification-item { padding: 1rem; color: white; cursor: pointer; transition: background-color 0.2s; border-bottom: 1px solid #333; }
         .notification-item:hover { background-color: #2a2a2a; }
         .notification-item:last-child { border-bottom: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .spinner { animation: spin 1s linear infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .pulse-animation { animation: pulse 2s infinite; }
+        .progress-bar { background: linear-gradient(90deg, #c74ece 0%, #8b5cf6 100%); }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        .gradient-border {
+            background: linear-gradient(to bottom right, #c74ece, #8b5cf6);
+            padding: 1px;
+            border-radius: 16px;
+        }
+        .gradient-border > div {
+            background: #1a1a1a;
+            border-radius: 15px;
+            padding: 24px;
+        }
     </style>
 </head>
 <body>
     <div id="root"></div>
     <script type="text/babel">
-        const Sidebar = () => { const handleLogout = (e) => { e.preventDefault(); localStorage.removeItem('Q.Ai_userData'); window.location.href = 'Login.html'; }; const sidebarItems = [ { icon: 'fa-graduation-cap', text: 'LEARN', link: 'HomePage.html', active: false }, { icon: 'fa-upload', text: 'USER UPLOADS', link: 'UserUploadPage.html', active: true }, { icon: 'fa-trophy', text: 'LEADERBOARDS', link: 'Leaderboards.html', active: false }, { icon: 'fa-user', text: 'PROFILE', link: 'MyProfile.html', active: false },]; return (<div className="sidebar"> <a href="HomePage.html" className="sidebar-logo">QUI.AI</a> <div> {sidebarItems.map(item => (<a key={item.text} href={item.link} className={`sidebar-item ${item.active ? 'active' : ''}`}> <i className={`fas ${item.icon} mr-3 text-white`}></i> <span className="text-lg font-semibold">{item.text}</span> </a>))} </div> <div className="relative group mt-auto mb-2"> <div className="sidebar-item"> <i className="fas fa-ellipsis-h mr-3 text-white"></i> <span className="text-lg font-semibold">MORE</span> </div> <div className="absolute bottom-full left-0 mb-2 w-[190px] bg-[#2a2a2a] rounded-lg shadow-lg hidden group-hover:block"> <button onClick={handleLogout} className="w-full text-left flex items-center text-white px-4 py-3 hover:bg-red-600 rounded-lg"> <i className="fas fa-sign-out-alt mr-3 text-white"></i> Log Out </button> </div> </div> </div>); };
-        const TopHeader = ({ userData, onCourseChange }) => { const [showNotifications, setShowNotifications] = React.useState(false); const courses = [ { id: 1, name: "Computer Vision", icon: "fa-eye" }, { id: 2, name: "Cloud", icon: "fa-cloud" }, { id: 3, name: "Deep Learning", icon: "fa-layer-group" }, { id: 4, name: "Machine Learning", icon: "fa-cogs" }, { id: 5, name: "NLP", icon: "fa-comment-dots" }, { id: 6, name: "Neural Networks", icon: "fa-brain" }, { id: 7, name: "Robotics", icon: "fa-robot" }, ]; return ( <div className="top-header"> <div className="header-item"> <i className="fas fa-fire text-orange-400"></i> <span>{userData?.stats?.dayStreak}</span> </div> <div className="header-item"> <i className="fas fa-heart text-red-500"></i> <span>{userData?.stats?.lives}</span> </div> <div className="header-item group"> <i className="fas fa-flag text-white"></i> <span>{userData?.currentCourse}</span> <div className="dropdown-content group-hover:flex"> {courses.map(course => ( <div key={course.id} onClick={() => onCourseChange(course.name)} className={`dropdown-item ${course.name === userData?.currentCourse ? 'active-course' : ''}`}> <i className={`fas ${course.icon} mr-3 text-white`}></i>{course.name} </div> ))} </div> </div> <div className="header-item" onClick={() => setShowNotifications(!showNotifications)}> <i className="fas fa-bell text-white"></i> {userData?.notifications?.length > 0 && <span className="notification-badge"></span>} <div className={`dropdown-content ${showNotifications ? 'flex' : 'hidden'}`} onClick={e => e.stopPropagation()}> {userData?.notifications?.length > 0 ? userData.notifications.map(n => <a href={n.link} key={n.id} className="notification-item">{n.message}</a>) : <div className="p-4 text-gray-400">No new notifications</div>} </div> </div> </div> ); };
-        const StarsBackground = () => ( <div className="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none"> <span className="star" style={{width: '2px', height: '2px', top: '10%', left: '15%', animationDuration: '3s'}}></span> <span className="star" style={{width: '1px', height: '1px', top: '25%', left: '25%', animationDuration: '4s', animationDelay: '1s'}}></span> <span className="star" style={{width: '3px', height: '3px', top: '5%', left: '50%', animationDuration: '2.5s'}}></span> <span className="star" style={{width: '1px', height: '1px', top: '40%', left: '65%', animationDuration: '5s', animationDelay: '0.5s'}}></span> <span className="star" style={{width: '2px', height: '2px', top: '60%', left: '85%', animationDuration: '3.5s'}}></span> <span className="star" style={{width: '3px', height: '3px', top: '80%', left: '95%', animationDuration: '2s', animationDelay: '1.5s'}}></span> <span className="star" style={{width: '1px', height: '1px', top: '90%', left: '55%', animationDuration: '4.5s'}}></span> <span className="star" style={{width: '2px', height: '2px', top: '75%', left: '20%', animationDuration: '3s', animationDelay: '2s'}}></span> </div> );
-        const GradientBorderBox = ({ children, className }) => ( <div className={`bg-gradient-to-br from-pink-500 to-purple-500 p-0.5 rounded-2xl ${className}`}> <div className="bg-[#1c1c1c] h-full w-full rounded-[15px] p-8"> {children} </div> </div> );
-        const ServiceBox = ({ icon, title, description, isSelected, onSelect }) => ( <div onClick={onSelect} className={`service-box h-full bg-[#1c1c1c] p-6 rounded-2xl cursor-pointer ${isSelected ? 'ring-2 ring-pink-500 scale-105' : 'hover:bg-gray-800/40'}`}> <i className={`fas ${icon} text-3xl mb-3 ${isSelected ? 'text-pink-500' : 'text-gray-400'}`}></i> <h3 className="text-xl font-bold text-white">{title}</h3> <p className="text-gray-400 text-sm mt-1">{description}</p> </div> );
-        const UploadModal = ({ isOpen, onClose }) => { if (!isOpen) return null; return ( <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"> <div className="bg-[#1c1c1c] rounded-2xl p-8 max-w-md w-full text-center border border-purple-500"> <i className="fas fa-check-circle text-6xl text-green-500 mb-4"></i> <h2 className="text-2xl font-bold text-white mb-2">Upload Successful!</h2> <p className="text-gray-300 mb-6">Our AI is processing your document. We will send you a notification as soon as your content is ready.</p> <button onClick={onClose} className="bg-[#c74ece] font-bold text-white px-8 py-3 rounded-lg hover:bg-[#b035dd] transition-colors">OKAY</button> </div> </div> ); };
-        
-        const HistoryPanel = ({ history, onClear }) => (
-            <div className="mt-12">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-3xl font-bold">Your Upload History</h2>
-                    {/* NEW: Clear History button */}
-                    {history && history.length > 0 && (
-                        <button onClick={onClear} className="text-sm font-semibold text-gray-400 hover:text-red-500 transition">
-                            <i className="fas fa-trash-alt mr-2"></i>Clear History
-                        </button>
-                    )}
-                </div>
-                <div className="space-y-3">
-                    {history && history.length > 0 ? (
-                        history.map(item => (
-                            <a href={`ResultsPage.html?id=${item.id}`} key={item.id} className="flex justify-between items-center p-4 bg-[#1c1c1c] rounded-lg hover:bg-gray-800/40 transition border border-gray-700">
-                                <div className="flex items-center gap-4">
-                                    <i className="fas fa-file-alt text-2xl text-purple-400"></i>
-                                    <div>
-                                        <p className="font-bold text-white">{item.fileName}</p>
-                                        <p className="text-sm text-gray-400">{item.date}</p>
-                                    </div>
-                                </div>
-                                <i className="fas fa-chevron-right text-gray-500"></i>
-                            </a>
-                        )).reverse()
-                    ) : (
-                        <div className="text-gray-500 text-center py-8 bg-[#1c1c1c] rounded-lg border border-gray-700">You haven't uploaded any documents yet.</div>
-                    )}
-                </div>
-            </div>
-        );
+        const { useState, useEffect, useRef } = React;
 
-        const UserUploadPage = () => {
-            const [userData, setUserData] = React.useState(null);
-            const [uploadHistory, setUploadHistory] = React.useState([]); // NEW state for history
-            const [selectedFile, setSelectedFile] = React.useState(null);
-            const [selectedServices, setSelectedServices] = React.useState([]);
-            const [isModalOpen, setIsModalOpen] = React.useState(false);
-            const fileInputRef = React.useRef(null);
-            
-            // NEW: Fetch history from backend on page load
-            React.useEffect(() => {
-                const storedUserData = localStorage.getItem('Q.Ai_userData');
-                if (storedUserData) { setUserData(JSON.parse(storedUserData)); }
+        // API Configuration
+        const API_BASE_URL = 'http://localhost:8000/api/v1';
 
-                // Fetch history from backend
-                // fetch('/api/user/history').then(res => res.json()).then(data => setUploadHistory(data));
-                
-                // For demonstration, we'll use mock data from localStorage
-                const mockHistory = JSON.parse(storedUserData)?.uploadHistory || [];
-                setUploadHistory(mockHistory);
+        // Function to show notifications
+        const showNotification = (message, type = 'info') => {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: bold;
+                z-index: 1000;
+                max-width: 300px;
+                background-color: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#3b82f6'};
+                animation: slideIn 0.3s ease-out;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
 
-            }, []);
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 5000);
+        };
 
-            const handleClearHistory = () => {
-                if (!window.confirm("Are you sure you want to clear your entire upload history? This cannot be undone.")) {
-                    return;
-                }
-                // This function should make a DELETE request to your backend
-                // fetch('/api/user/history', { method: 'DELETE' });
+        // Helper function to update upload history in localStorage
+        const updateUploadHistory = (uploadRecord) => {
+            const userData = JSON.parse(localStorage.getItem('Q.Ai_userData') || '{}');
+            if (!userData.uploadHistory) {
+                userData.uploadHistory = [];
+            }
+            userData.uploadHistory.unshift(uploadRecord);
+            userData.uploadHistory = userData.uploadHistory.slice(0, 20);
+            localStorage.setItem('Q.Ai_userData', JSON.stringify(userData));
+            return userData.uploadHistory;
+        };
 
-                // For simulation, we'll clear it from localStorage
-                const currentUserData = JSON.parse(localStorage.getItem('Q.Ai_userData'));
-                currentUserData.uploadHistory = [];
-                localStorage.setItem('Q.Ai_userData', JSON.stringify(currentUserData));
-                setUploadHistory([]); // Update the UI
+        // Function to update service status
+        const updateServiceStatus = (sessionId, service, status, error = null, metadata = null, history) => {
+            const record = history.find(item => item.id === sessionId);
+            if (!record) return history;
+
+            if (!record.serviceResults) {
+                record.serviceResults = {};
+            }
+
+            record.serviceResults[service] = {
+                status: status,
+                error: error,
+                metadata: metadata,
+                updated_at: new Date().toISOString()
             };
 
-            const handleCourseChange = (newCourseName) => { setUserData(prevData => { const updatedData = { ...prevData, currentCourse: newCourseName }; localStorage.setItem('Q.Ai_userData', JSON.stringify(updatedData)); return updatedData; }); };
-            const handleFileSelect = (event) => { const file = event.target.files[0]; if (file && file.type === 'application/pdf') { setSelectedFile(file); } else { alert('Please select a PDF file.'); } };
-            const toggleService = (serviceId) => { setSelectedServices(prev => prev.includes(serviceId) ? prev.filter(id => id !== serviceId) : [...prev, serviceId]); };
-            const handleSubmit = () => {
-                // This function would now just upload the file.
-                // The backend would be responsible for creating the history record.
-                if (!selectedFile || selectedServices.length === 0) { alert('Please select a file and at least one service.'); return; }
-                setIsModalOpen(true);
+            // Update overall status based on service statuses
+            const serviceStatuses = Object.values(record.serviceResults).map(r => r.status);
+            if (serviceStatuses.every(s => s === 'completed')) {
+                record.status = 'completed';
+            } else if (serviceStatuses.some(s => s === 'failed')) {
+                record.status = 'partial';
+            } else if (serviceStatuses.some(s => s === 'processing')) {
+                record.status = 'processing';
+            }
+
+            // Update localStorage
+            const userData = JSON.parse(localStorage.getItem('Q.Ai_userData') || '{}');
+            const recordIndex = userData.uploadHistory.findIndex(item => item.id === sessionId);
+            if (recordIndex !== -1) {
+                userData.uploadHistory[recordIndex] = record;
+                localStorage.setItem('Q.Ai_userData', JSON.stringify(userData));
+            }
+
+            return [...history];
+        };
+
+        const Sidebar = () => {
+            const handleLogout = (e) => {
+                e.preventDefault();
+                localStorage.removeItem('Q.Ai_userData');
+                window.location.href = 'Login.html';
             };
-            const closeModal = () => { setIsModalOpen(false); setSelectedFile(null); setSelectedServices([]); };
-            const services = [ { id: 'mcq', icon: 'fa-list-check', title: 'MCQ', description: 'Generate quiz questions' }, { id: 'rephrase', icon: 'fa-pen-nib', title: 'Rephrase', description: 'Simplify complex text' }, { id: 'flashcards', icon: 'fa-layer-group', title: 'Flash Cards', description: 'Create study cards' }, { id: 'summary', icon: 'fa-align-left', title: 'Summarization', description: 'Get a concise summary' }, ];
+
+            const sidebarItems = [
+                { icon: 'fa-graduation-cap', text: 'LEARN', link: 'HomePage.html', active: false },
+                { icon: 'fa-upload', text: 'USER UPLOADS', link: 'UserUploadPage.html', active: true },
+                { icon: 'fa-trophy', text: 'LEADERBOARDS', link: 'Leaderboards.html', active: false },
+                { icon: 'fa-user', text: 'PROFILE', link: 'MyProfile.html', active: false },
+            ];
 
             return (
-                <div className="relative min-h-screen">
-                    <StarsBackground />
-                    <Sidebar />
-                    <TopHeader userData={userData} onCourseChange={handleCourseChange}/>
-                    <main className="pl-[200px]" style={{ paddingTop: '60px' }}>
-                        <div className="p-8 sm:p-12">
-                            <h1 className="text-4xl font-bold mb-2">User Upload</h1>
-                            <p className="text-gray-400 mb-8">Generate custom learning materials from your own documents.</p>
-                            <GradientBorderBox>
-                                <div onClick={() => fileInputRef.current.click()} className="border-2 border-dashed border-gray-600 rounded-xl p-12 text-center cursor-pointer hover:border-purple-500 hover:bg-gray-800/30 transition">
-                                    <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept=".pdf"/>
-                                    <i className="fas fa-file-pdf text-5xl text-purple-400 mb-4"></i>
-                                    {selectedFile ? ( <> <p className="text-lg font-bold">{selectedFile.name}</p> <p className="text-sm text-gray-400">Click here to choose a different file</p> </> ) : ( <> <p className="text-lg font-bold">Drag & drop your PDF here</p> <p className="text-sm text-gray-400">or click to browse</p> </> )}
-                                </div>
-                                <h2 className="text-2xl font-bold mt-8 mb-4">Choose Services</h2>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                                    {services.map(service => ( <ServiceBox key={service.id} {...service} isSelected={selectedServices.includes(service.id)} onSelect={() => toggleService(service.id)} /> ))}
-                                </div>
-                                <div className="mt-8 text-right">
-                                    <button onClick={handleSubmit} disabled={!selectedFile || selectedServices.length === 0} className="bg-pink-600 text-white font-bold py-3 px-10 rounded-lg disabled:bg-gray-600 disabled:cursor-not-allowed hover:enabled:bg-pink-700 transition"> Generate </button>
-                                </div>
-                            </GradientBorderBox>
-                            <HistoryPanel history={uploadHistory} onClear={handleClearHistory} />
+                <div className="sidebar">
+                    <a href="HomePage.html" className="sidebar-logo">QUI.AI</a>
+                    <div className="flex-1">
+                        {sidebarItems.map(item => (
+                            <a
+                                key={item.text}
+                                href={item.link}
+                                className={`sidebar-item ${item.active ? 'active' : ''}`}
+                            >
+                                <i className={`fas ${item.icon} mr-3`}></i>
+                                <span>{item.text}</span>
+                            </a>
+                        ))}
+                    </div>
+                    <div className="relative group mt-auto mb-2">
+                        <div className="sidebar-item">
+                            <i className="fas fa-ellipsis-h mr-3"></i>
+                            <span>MORE</span>
                         </div>
-                    </main>
-                    <UploadModal isOpen={isModalOpen} onClose={closeModal} />
+                        <div className="absolute bottom-full left-0 mb-2 w-[190px] bg-gray-800 rounded-lg shadow-lg hidden group-hover:block">
+                            <button
+                                onClick={handleLogout}
+                                className="w-full text-left flex items-center text-white px-4 py-3 hover:bg-red-600 rounded-lg"
+                            >
+                                <i className="fas fa-sign-out-alt mr-3"></i>
+                                Log Out
+                            </button>
+                        </div>
+                    </div>
                 </div>
             );
         };
-        ReactDOM.createRoot(document.getElementById('root')).render(<UserUploadPage />);
+
+        const TopHeader = ({ userData, onCourseChange }) => {
+            const [showNotifications, setShowNotifications] = useState(false);
+
+            const courses = [
+                { id: 1, name: "Computer Vision", icon: "fa-eye" },
+                { id: 2, name: "Cloud", icon: "fa-cloud" },
+                { id: 3, name: "Deep Learning", icon: "fa-layer-group" },
+                { id: 4, name: "Machine Learning", icon: "fa-cogs" },
+                { id: 5, name: "NLP", icon: "fa-comment-dots" },
+                { id: 6, name: "Neural Networks", icon: "fa-brain" },
+                { id: 7, name: "Robotics", icon: "fa-robot" },
+            ];
+
+            return (
+                <div className="top-header">
+                    <div className="flex items-center gap-2 text-white">
+                        <i className="fas fa-fire text-orange-400"></i>
+                        <span>{userData?.stats?.dayStreak || 0}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-white">
+                        <i className="fas fa-heart text-red-500"></i>
+                        <span>{userData?.stats?.lives || 5}</span>
+                    </div>
+                    <div className="header-item">
+                        <i className="fas fa-flag"></i>
+                        <span>{userData?.currentCourse || 'Machine Learning'}</span>
+                        <div className="dropdown-content">
+                            {courses.map(course => (
+                                <div
+                                    key={course.id}
+                                    onClick={() => onCourseChange(course.name)}
+                                    className={`dropdown-item ${course.name === userData?.currentCourse ? 'active-course' : ''}`}
+                                >
+                                    <i className={`fas ${course.icon} mr-3`}></i>
+                                    {course.name}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="header-item" onClick={() => setShowNotifications(!showNotifications)}>
+                        <i className="fas fa-bell"></i>
+                        {userData?.notifications?.length > 0 && <span className="notification-badge"></span>}
+                        <div className={`dropdown-content ${showNotifications ? 'block' : 'hidden'}`} onClick={e => e.stopPropagation()}>
+                            {userData?.notifications?.length > 0 ? userData.notifications.map(n =>
+                                <a href={n.link} key={n.id} className="notification-item">{n.message}</a>
+                            ) :
+                                <div className="p-4 text-gray-400 text-center">No new notifications</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const StarsBackground = () => (
+            <div className="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none">
+                {[...Array(20)].map((_, i) => (
+                    <span
+                        key={i}
+                        className="star"
+                        style={{
+                            width: `${Math.random() * 2 + 1}px`,
+                            height: `${Math.random() * 2 + 1}px`,
+                            top: `${Math.random() * 100}%`,
+                            left: `${Math.random() * 100}%`,
+                            animationDuration: `${Math.random() * 3 + 2}s`,
+                            animationDelay: `${Math.random() * 2}s`
+                        }}
+                    ></span>
+                ))}
+            </div>
+        );
+
+        const ServiceBox = ({ icon, title, description, isSelected, onSelect, disabled }) => (
+            <div
+                onClick={disabled ? null : onSelect}
+                className={`h-full bg-gray-900 p-6 rounded-2xl border-2 transition-all ${disabled ? 'opacity-50 cursor-not-allowed border-gray-700' : 'cursor-pointer border-gray-700 hover:border-purple-500'} ${isSelected ? 'border-pink-500 scale-105 bg-purple-900' : ''}`}
+            >
+                <i className={`fas ${icon} text-3xl mb-3 ${isSelected ? 'text-pink-500' : disabled ? 'text-gray-600' : 'text-gray-400'}`}></i>
+                <h3 className="text-xl font-bold text-white">{title}</h3>
+                <p className="text-gray-400 text-sm mt-1">{description}</p>
+            </div>
+        );
+
+        const ProcessingModal = ({ isOpen, onClose, status, progress, sessionId }) => {
+            if (!isOpen) return null;
+
+            const getStatusIcon = () => {
+                switch(status) {
+                    case 'uploaded': return 'fa-check-circle text-green-500';
+                    case 'cleaning': return 'fa-spinner fa-spin text-blue-500';
+                    case 'processing': return 'fa-spinner fa-spin text-purple-500';
+                    case 'completed': return 'fa-check-circle text-green-500';
+                    case 'failed': return 'fa-exclamation-circle text-red-500';
+                    default: return 'fa-spinner fa-spin text-blue-500';
+                }
+            };
+
+            const getStatusMessage = () => {
+                switch(status) {
+                    case 'uploaded': return 'File uploaded successfully!';
+                    case 'cleaning': return 'Cleaning and preparing document...';
+                    case 'processing': return 'Generating AI content...';
+                    case 'completed': return 'Processing completed successfully!';
+                    case 'failed': return 'Processing failed. Please try again.';
+                    default: return 'Processing your document...';
+                }
+            };
+
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+                    <div className="gradient-border">
+                        <div className="bg-gray-900 rounded-[15px] p-8 max-w-md w-full text-center">
+                            <i className={`fas ${getStatusIcon()} text-6xl mb-4`}></i>
+                            <h2 className="text-2xl font-bold text-white mb-2">{getStatusMessage()}</h2>
+
+                            <div className="w-full bg-gray-700 rounded-full h-2 mb-4">
+                                <div
+                                    className="bg-gradient-to-r from-pink-500 to-purple-500 h-2 rounded-full transition-all duration-500"
+                                    style={{ width: `${progress}%` }}
+                                ></div>
+                            </div>
+
+                            <p className="text-gray-300 mb-6">{Math.round(progress)}% Complete</p>
+
+                            {sessionId && (
+                                <p className="text-xs text-gray-500 mb-4">Session ID: {sessionId}</p>
+                            )}
+
+                            {(status === 'completed' || status === 'failed') && (
+                                <button
+                                    onClick={onClose}
+                                    className="bg-pink-600 font-bold text-white px-8 py-3 rounded-lg hover:bg-pink-700 transition-colors"
+                                >
+                                    {status === 'completed' ? 'VIEW RESULTS' : 'CLOSE'}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const HistoryPanel = ({ history, onClear, isLoading }) => {
+            if (isLoading) {
+                return (
+                    <div className="mt-12">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-3xl font-bold text-white">Your Upload History</h2>
+                        </div>
+                        <div className="text-center py-8 bg-gray-900 rounded-lg border border-gray-700">
+                            <i className="fas fa-spinner fa-spin text-2xl text-purple-400 mb-2"></i>
+                            <p className="text-gray-400">Loading history...</p>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="mt-12">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-3xl font-bold text-white">Your Upload History</h2>
+                        {history && history.length > 0 && (
+                            <button
+                                onClick={onClear}
+                                className="text-sm font-semibold text-gray-400 hover:text-red-500 transition"
+                            >
+                                <i className="fas fa-trash-alt mr-2"></i>Clear History
+                            </button>
+                        )}
+                    </div>
+                    <div className="space-y-3">
+                        {history && history.length > 0 ? (
+                            history.map(item => (
+                                <div key={item.id} className="flex justify-between items-center p-4 bg-gray-900 rounded-lg border border-gray-700">
+                                    <div className="flex items-center gap-4">
+                                        <i className="fas fa-file-alt text-2xl text-purple-400"></i>
+                                        <div>
+                                            <p className="font-bold text-white">{item.fileName}</p>
+                                            <p className="text-sm text-gray-400">{item.date}</p>
+
+                                            {/* Overall Status */}
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className={`text-xs px-2 py-1 rounded ${item.status === 'completed' ? 'bg-green-600 text-white' : item.status === 'processing' ? 'bg-blue-600 text-white' : item.status === 'partial' ? 'bg-yellow-600 text-white' : item.status === 'failed' ? 'bg-red-600 text-white' : 'bg-gray-600 text-white'}`}>
+                                                    {item.status || 'pending'}
+                                                </span>
+                                                {item.status === 'processing' && (
+                                                    <i className="fas fa-spinner fa-spin text-blue-400"></i>
+                                                )}
+                                            </div>
+
+                                            {/* Service Status Indicators */}
+                                            {item.serviceResults && (
+                                                <div className="flex flex-wrap gap-1 mt-2">
+                                                    {Object.entries(item.serviceResults).map(([service, result]) => (
+                                                        <span
+                                                            key={service}
+                                                            className={`text-xs px-2 py-1 rounded capitalize ${result.status === 'completed' ? 'bg-green-500 text-white' : result.status === 'processing' ? 'bg-blue-500 text-white' : result.status === 'failed' ? 'bg-red-500 text-white' : 'bg-gray-500 text-white'}`}
+                                                            title={result.error || `${service}: ${result.status}`}
+                                                        >
+                                                            {service}
+                                                            {result.status === 'processing' && result.metadata?.progress &&
+                                                                ` (${result.metadata.progress}%)`
+                                                            }
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        {(item.status === 'completed' || item.status === 'partial') && (
+                                            <a
+                                                href={`ResultsPage.html?id=${item.id}`}
+                                                className="text-green-400 hover:text-green-300"
+                                                title="View Results"
+                                            >
+                                                <i className="fas fa-eye"></i>
+                                            </a>
+                                        )}
+                                        <i className="fas fa-chevron-right text-gray-500"></i>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="text-gray-500 text-center py-8 bg-gray-900 rounded-lg border border-gray-700">
+                                You haven't uploaded any documents yet.
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const UserUploadPage = () => {
+            const [userData, setUserData] = useState({
+                stats: { dayStreak: 7, lives: 5 },
+                currentCourse: 'Machine Learning',
+                notifications: [
+                    { id: 1, message: "New quiz available: Deep Learning Basics", link: "#" },
+                    { id: 2, message: "You earned 50 XP!", link: "#" }
+                ],
+                uploadHistory: []
+            });
+            const [uploadHistory, setUploadHistory] = useState([]);
+            const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+            const [selectedFile, setSelectedFile] = useState(null);
+            const [selectedServices, setSelectedServices] = useState([]);
+            const [isProcessingModalOpen, setIsProcessingModalOpen] = useState(false);
+            const [processingStatus, setProcessingStatus] = useState('uploaded');
+            const [processingProgress, setProcessingProgress] = useState(0);
+            const [currentSessionId, setCurrentSessionId] = useState(null);
+            const [isUploading, setIsUploading] = useState(false);
+            const fileInputRef = useRef(null);
+            const statusPollingRef = useRef(null);
+
+            // Load user data and fetch history on mount
+            useEffect(() => {
+                const storedData = localStorage.getItem('Q.Ai_userData');
+                if (storedData) {
+                    const parsedData = JSON.parse(storedData);
+                    setUserData(parsedData);
+                    setUploadHistory(parsedData.uploadHistory || []);
+                }
+            }, []);
+
+            // Fetch upload history
+            const fetchUploadHistory = async () => {
+                try {
+                    setIsHistoryLoading(true);
+                    const storedData = localStorage.getItem('Q.Ai_userData');
+                    if (storedData) {
+                        const parsedData = JSON.parse(storedData);
+                        setUploadHistory(parsedData.uploadHistory || []);
+                    }
+                    setIsHistoryLoading(false);
+                } catch (error) {
+                    console.error('Failed to fetch upload history:', error);
+                    setIsHistoryLoading(false);
+                }
+            };
+
+            const handleClearHistory = async () => {
+                if (!window.confirm("Are you sure you want to clear your entire upload history? This cannot be undone.")) {
+                    return;
+                }
+
+                try {
+                    const userData = JSON.parse(localStorage.getItem('Q.Ai_userData') || '{}');
+                    userData.uploadHistory = [];
+                    localStorage.setItem('Q.Ai_userData', JSON.stringify(userData));
+                    setUploadHistory([]);
+                    showNotification('History cleared successfully!', 'success');
+                } catch (error) {
+                    console.error('Failed to clear history:', error);
+                    showNotification('Failed to clear history. Please try again.', 'error');
+                }
+            };
+
+            const handleCourseChange = (newCourseName) => {
+                setUserData(prevData => ({
+                    ...prevData,
+                    currentCourse: newCourseName
+                }));
+            };
+
+            const handleFileSelect = (event) => {
+                const file = event.target.files[0];
+                if (file && file.type === 'application/pdf') {
+                    setSelectedFile(file);
+                } else {
+                    showNotification('Please select a PDF file.', 'error');
+                }
+            };
+
+            const toggleService = (serviceId) => {
+                setSelectedServices(prev =>
+                    prev.includes(serviceId)
+                        ? prev.filter(id => id !== serviceId)
+                        : [...prev, serviceId]
+                );
+            };
+
+            const handleSubmit = async () => {
+                if (!selectedFile || selectedServices.length === 0) {
+                    showNotification('Please select a file and at least one service.', 'error');
+                    return;
+                }
+
+                setIsUploading(true);
+                setProcessingStatus('uploaded');
+                setProcessingProgress(10);
+                setIsProcessingModalOpen(true);
+
+                const sessionId = 'session_' + Date.now();
+                setCurrentSessionId(sessionId);
+
+                try {
+                    const formData = new FormData();
+                    formData.append('file', selectedFile);
+
+                    // Call upload-and-clean endpoint
+                    const response = await fetch(`${API_BASE_URL}/upload-and-clean`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Upload failed: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        const sessionId = data.session_id;
+                        setCurrentSessionId(sessionId);
+
+                        // Create upload record
+                        const uploadRecord = {
+                            id: sessionId,
+                            fileName: selectedFile.name,
+                            date: new Date().toLocaleDateString(),
+                            services: selectedServices,
+                            status: 'processing',
+                            serviceResults: {}
+                        };
+
+                        // Update history
+                        const updatedHistory = updateUploadHistory(uploadRecord);
+                        setUploadHistory(updatedHistory);
+                        setProcessingProgress(30);
+                        setProcessingStatus('cleaning');
+
+                        // Start polling for cleaning status
+                        pollCleaningStatus(sessionId, selectedServices);
+                    } else {
+                        throw new Error(data.message || 'Upload failed');
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    showNotification(`Upload failed: ${error.message}`, 'error');
+                    setProcessingStatus('failed');
+                    setIsUploading(false);
+                }
+            };
+
+            // Poll cleaning status - UPDATED VERSION
+            const pollCleaningStatus = async (sessionId, services) => {
+                let attempts = 0;
+                const maxAttempts = 240;
+                let lastStatus = '';
+
+                const poll = async () => {
+                    try {
+                        attempts++;
+                        const statusResponse = await fetch(`${API_BASE_URL}/status/${sessionId}`);
+
+                        if (!statusResponse.ok) {
+                            console.warn(`Status check failed: ${statusResponse.statusText}`);
+                            if (attempts < maxAttempts) {
+                                statusPollingRef.current = setTimeout(poll, 5000);
+                            }
+                            return;
+                        }
+
+                        const statusData = await statusResponse.json();
+                        const currentStatus = statusData.status || '';
+
+                        // Only update UI if status changed
+                        if (currentStatus !== lastStatus) {
+                            console.log(`Status update: ${currentStatus} (Attempt ${attempts})`);
+
+                            if (currentStatus === 'cleaning') {
+                                setProcessingStatus('cleaning');
+                                setProcessingProgress(50);
+                            }
+                            else if (currentStatus === 'completed_clean_and_saved') {
+                                setProcessingStatus('processing');
+                                setProcessingProgress(70);
+
+                                // Get document ID - try multiple possible locations
+                                const documentId = statusData.document_id ||
+                                                statusData.details?.document_id ||
+                                                statusData.cleaned_document?.id;
+
+                                if (!documentId) {
+                                    throw new Error('Document ID not found after cleaning');
+                                }
+
+                                // Start processing selected services
+                                await processSelectedServices(documentId, sessionId, services);
+                                return; // Exit after starting services
+                            }
+                            else if (currentStatus === 'failed') {
+                                setProcessingStatus('failed');
+                                setUploadHistory(prev => prev.map(upload =>
+                                    upload.id === sessionId
+                                        ? { ...upload, status: 'failed', error: statusData.error }
+                                        : upload
+                                ));
+                                showNotification('Document cleaning failed', 'error');
+                                return;
+                            }
+
+                            lastStatus = currentStatus;
+                        }
+
+                        // Continue polling if not complete
+                        if (attempts < maxAttempts) {
+                            statusPollingRef.current = setTimeout(poll, 5000);
+                        } else {
+                            console.warn(`Max polling attempts reached for session ${sessionId}`);
+                            setProcessingStatus('timeout');
+                            setUploadHistory(prev => prev.map(upload =>
+                                upload.id === sessionId
+                                    ? { ...upload, status: 'timeout', error: 'Max polling attempts reached' }
+                                    : upload
+                            ));
+                            showNotification('Processing timeout - please try again', 'error');
+                        }
+                    } catch (error) {
+                        console.error(`Status polling error for ${sessionId}:`, error);
+                        if (attempts < maxAttempts) {
+                            statusPollingRef.current = setTimeout(poll, 5000);
+                        } else {
+                            setUploadHistory(prev => prev.map(upload =>
+                                upload.id === sessionId
+                                    ? { ...upload, status: 'error', error: error.message }
+                                    : upload
+                            ));
+                        }
+                    }
+                };
+
+                // Start polling immediately
+                poll();
+            };
+
+            // Process selected services - UPDATED VERSION
+            const processSelectedServices = async (documentId, sessionId, services) => {
+                console.log(`🚀 Starting service processing for document: ${documentId}`);
+                console.log(`🔧 Services to process: ${services.join(', ')}`);
+                setProcessingStatus('processing');
+                setProcessingProgress(80);
+
+                for (const service of services) {
+                    try {
+                        // Update service status to processing
+                        setUploadHistory(prev => updateServiceStatus(
+                            sessionId,
+                            service,
+                            'processing',
+                            null,
+                            { progress: 0 },
+                            prev
+                        ));
+
+                        // Determine endpoint based on service
+                        let endpoint;
+                        switch (service) {
+                            case 'mcq':
+                                endpoint = `${API_BASE_URL}/mcq/generate/${documentId}`;
+                                break;
+                            case 'rephrase':
+                                endpoint = `${API_BASE_URL}/rephrase/generate/${documentId}`;
+                                break;
+                            case 'flashcards':
+                                endpoint = `${API_BASE_URL}/flashcards/generate/${documentId}`;
+                                break;
+                            case 'summary':
+                                endpoint = `${API_BASE_URL}/summary/generate/${documentId}`;
+                                break;
+                            default:
+                                throw new Error(`Unknown service: ${service}`);
+                        }
+
+                        // Start service processing
+                        const serviceResponse = await fetch(endpoint, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ session_id: sessionId })
+                        });
+
+                        if (!serviceResponse.ok) {
+                            throw new Error(`Service failed: ${serviceResponse.statusText}`);
+                        }
+
+                        const serviceData = await serviceResponse.json();
+
+                        if (!serviceData.success) {
+                            throw new Error(serviceData.message || 'Service processing failed');
+                        }
+
+                        // Start polling for service status
+                        pollServiceStatus(service, serviceData.session_id, sessionId);
+
+                    } catch (error) {
+                        console.error(`Service ${service} processing error:`, error);
+                        setUploadHistory(prev => updateServiceStatus(
+                            sessionId,
+                            service,
+                            'failed',
+                            error.message,
+                            null,
+                            prev
+                        ));
+                    }
+                }
+
+                // Set to completed after starting all services
+                setProcessingProgress(100);
+                setProcessingStatus('completed');
+                setIsUploading(false);
+            };
+
+            // Unified service status polling
+            const pollServiceStatus = async (serviceType, serviceSessionId, uploadSessionId) => {
+                let attempts = 0;
+                const maxAttempts = 60;
+                const endpoint = `${API_BASE_URL}/${serviceType}/status/${serviceSessionId}`;
+
+                const poll = async () => {
+                    try {
+                        attempts++;
+                        const response = await fetch(endpoint);
+
+                        if (!response.ok) throw new Error('Status check failed');
+
+                        const statusData = await response.json();
+
+                        if (statusData.status === 'completed') {
+                            setUploadHistory(prev => updateServiceStatus(
+                                uploadSessionId,
+                                serviceType,
+                                'completed',
+                                null,
+                                { result: statusData.result },
+                                prev
+                            ));
+                        }
+                        else if (statusData.status === 'failed') {
+                            setUploadHistory(prev => updateServiceStatus(
+                                uploadSessionId,
+                                serviceType,
+                                'failed',
+                                statusData.error,
+                                null,
+                                prev
+                            ));
+                        }
+                        else if (statusData.status === 'processing') {
+                            setUploadHistory(prev => updateServiceStatus(
+                                uploadSessionId,
+                                serviceType,
+                                'processing',
+                                null,
+                                { progress: statusData.progress },
+                                prev
+                            ));
+
+                            // Continue polling
+                            if (attempts < maxAttempts) {
+                                statusPollingRef.current = setTimeout(poll, 5000);
+                            }
+                        }
+                    } catch (error) {
+                        if (attempts < maxAttempts) {
+                            statusPollingRef.current = setTimeout(poll, 5000);
+                        } else {
+                            setUploadHistory(prev => updateServiceStatus(
+                                uploadSessionId,
+                                serviceType,
+                                'timeout',
+                                'Max polling attempts reached',
+                                null,
+                                prev
+                            ));
+                        }
+                    }
+                };
+
+                // Start polling
+                statusPollingRef.current = setTimeout(poll, 2000);
+            };
+
+            const closeProcessingModal = () => {
+                setIsProcessingModalOpen(false);
+                setSelectedFile(null);
+                setSelectedServices([]);
+                setCurrentSessionId(null);
+                setProcessingStatus('uploaded');
+                setProcessingProgress(0);
+                setIsUploading(false);
+
+                if (statusPollingRef.current) {
+                    clearTimeout(statusPollingRef.current);
+                }
+            };
+
+            const services = [
+                { id: 'mcq', icon: 'fa-list-check', title: 'MCQ', description: 'Generate quiz questions' },
+                { id: 'rephrase', icon: 'fa-pen-nib', title: 'Rephrase', description: 'Simplify complex text' },
+                { id: 'flashcards', icon: 'fa-layer-group', title: 'Flash Cards', description: 'Create study cards' },
+                { id: 'summary', icon: 'fa-align-left', title: 'Summarization', description: 'Get a concise summary' },
+            ];
+
+            return (
+                <div className="relative min-h-screen bg-gray-800">
+                    <StarsBackground />
+                    <Sidebar />
+                    <TopHeader userData={userData} onCourseChange={handleCourseChange}/>
+                    <main className="pl-[200px] pt-[60px]">
+                        <div className="p-8 sm:p-12">
+                            <h1 className="text-4xl font-bold mb-2 text-white">User Upload</h1>
+                            <p className="text-gray-400 mb-8">Generate custom learning materials from your own documents.</p>
+                            <div className="gradient-border">
+                                <div
+                                    onClick={() => !isUploading && fileInputRef.current?.click()}
+                                    className={`border-2 border-dashed border-gray-600 rounded-xl p-12 text-center ${isUploading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:border-purple-500 hover:bg-gray-800'}`}
+                                >
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleFileSelect}
+                                        className="hidden"
+                                        accept=".pdf"
+                                        disabled={isUploading}
+                                    />
+                                    <i className={`fas ${isUploading ? 'fa-spinner fa-spin' : 'fa-file-pdf'} text-5xl text-purple-400 mb-4`}></i>
+                                    {selectedFile ? (
+                                        <>
+                                            <p className="text-lg font-bold text-white">{selectedFile.name}</p>
+                                            <p className="text-sm text-gray-400">Click here to choose a different file</p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <p className="text-lg font-bold text-white">Drag & drop your PDF here</p>
+                                            <p className="text-sm text-gray-400">or click to browse</p>
+                                        </>
+                                    )}
+                                </div>
+
+                                <h2 className="text-2xl font-bold mt-8 mb-4 text-white">Choose Services</h2>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    {services.map(service => (
+                                        <ServiceBox
+                                            key={service.id}
+                                            {...service}
+                                            isSelected={selectedServices.includes(service.id)}
+                                            onSelect={() => toggleService(service.id)}
+                                        />
+                                    ))}
+                                </div>
+                                <div className="mt-8 text-right">
+                                    <button
+                                        onClick={handleSubmit}
+                                        disabled={!selectedFile || selectedServices.length === 0 || isUploading}
+                                        className="bg-pink-600 text-white font-bold py-3 px-10 rounded-lg disabled:bg-gray-600 disabled:cursor-not-allowed hover:enabled:bg-pink-700 transition"
+                                    >
+                                        {isUploading ? 'Processing...' : 'Generate'}
+                                    </button>
+                                </div>
+                            </div>
+                            <HistoryPanel
+                                history={uploadHistory}
+                                onClear={handleClearHistory}
+                                isLoading={isHistoryLoading}
+                            />
+                        </div>
+                    </main>
+                    <ProcessingModal
+                        isOpen={isProcessingModalOpen}
+                        onClose={closeProcessingModal}
+                        status={processingStatus}
+                        progress={processingProgress}
+                        sessionId={currentSessionId}
+                    />
+                </div>
+            );
+        };
+
+        // Mount the React app
+        ReactDOM.render(<UserUploadPage />, document.getElementById('root'));
     </script>
 </body>
 </html>

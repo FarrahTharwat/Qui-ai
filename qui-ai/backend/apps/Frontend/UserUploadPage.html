@@ -44,7 +44,7 @@
         const GradientBorderBox = ({ children, className }) => ( <div className={`bg-gradient-to-br from-pink-500 to-purple-500 p-0.5 rounded-2xl ${className}`}> <div className="bg-[#1c1c1c] h-full w-full rounded-[15px] p-8"> {children} </div> </div> );
         const ServiceBox = ({ icon, title, description, isSelected, onSelect }) => ( <div onClick={onSelect} className={`service-box h-full bg-[#1c1c1c] p-6 rounded-2xl cursor-pointer ${isSelected ? 'ring-2 ring-pink-500 scale-105' : 'hover:bg-gray-800/40'}`}> <i className={`fas ${icon} text-3xl mb-3 ${isSelected ? 'text-pink-500' : 'text-gray-400'}`}></i> <h3 className="text-xl font-bold text-white">{title}</h3> <p className="text-gray-400 text-sm mt-1">{description}</p> </div> );
         const UploadModal = ({ isOpen, onClose }) => { if (!isOpen) return null; return ( <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"> <div className="bg-[#1c1c1c] rounded-2xl p-8 max-w-md w-full text-center border border-purple-500"> <i className="fas fa-check-circle text-6xl text-green-500 mb-4"></i> <h2 className="text-2xl font-bold text-white mb-2">Upload Successful!</h2> <p className="text-gray-300 mb-6">Our AI is processing your document. We will send you a notification as soon as your content is ready.</p> <button onClick={onClose} className="bg-[#c74ece] font-bold text-white px-8 py-3 rounded-lg hover:bg-[#b035dd] transition-colors">OKAY</button> </div> </div> ); };
-        
+
         const HistoryPanel = ({ history, onClear }) => (
             <div className="mt-12">
                 <div className="flex justify-between items-center mb-4">
@@ -76,7 +76,7 @@
                 </div>
             </div>
         );
-
+    const API_BASE_URL = 'http://localhost:8000/api/v1';
         const UserUploadPage = () => {
             const [userData, setUserData] = React.useState(null);
             const [uploadHistory, setUploadHistory] = React.useState([]); // NEW state for history
@@ -84,7 +84,7 @@
             const [selectedServices, setSelectedServices] = React.useState([]);
             const [isModalOpen, setIsModalOpen] = React.useState(false);
             const fileInputRef = React.useRef(null);
-            
+
             // NEW: Fetch history from backend on page load
             React.useEffect(() => {
                 const storedUserData = localStorage.getItem('Q.Ai_userData');
@@ -92,7 +92,7 @@
 
                 // Fetch history from backend
                 // fetch('/api/user/history').then(res => res.json()).then(data => setUploadHistory(data));
-                
+
                 // For demonstration, we'll use mock data from localStorage
                 const mockHistory = JSON.parse(storedUserData)?.uploadHistory || [];
                 setUploadHistory(mockHistory);

@@ -10,10 +10,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
-
+import time
+from fastapi import HTTPException
+from app.utils.retry import async_retry
 # Import routers
 from app.routes.upload import router as upload_router
 from app.routes.mcq import router as mcq_router
+from app.routes.summarize import router as summarize_router
 
 # Import MCQ service for model loading
 from app.services.mcq_service import mcq_service
@@ -67,6 +70,26 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+
+@app.middleware("http")
+async def timeout_middleware(request: Request, call_next):
+    """Middleware to handle long-running requests"""
+    start_time = time.time()
+    timeout = 300  # 5 minutes
+
+    try:
+        response = await call_next(request)
+    except asyncio.TimeoutError:
+        logger.warning(f"Request timed out: {request.url}")
+        raise HTTPException(status_code=504, detail="Request timed out")
+
+    process_time = time.time() - start_time
+    if process_time > timeout:
+        logger.warning(f"Long request to {request.url} took {process_time:.2f}s")
+
+    return response
+
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -85,6 +108,7 @@ app.add_middleware(
 # Include routers
 app.include_router(upload_router)
 app.include_router(mcq_router)
+app.include_router(summarize_router)
 
 
 @app.exception_handler(Exception)
@@ -145,7 +169,7 @@ async def health_check():
     try:
         # Check if MCQ models are loaded
         from app.core.mcq_generator import _models_loaded
-        
+
         return {
             "status": "healthy",
             "timestamp": "2024-01-01T00:00:00Z",  # Will be replaced with actual timestamp
@@ -177,12 +201,20 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", "8000"))
     workers = int(os.getenv("WORKERS", "1"))
 
-    # Run the application
-    uvicorn.run(
+    # Increase timeout settings
+    uvicorn_config = uvicorn.Config(
         "main:app",
         host=host,
         port=port,
         workers=workers,
         reload=os.getenv("DEBUG", "false").lower() == "true",
-        log_level="info"
+        log_level="info",
+        timeout_keep_alive=300,  # 5 minutes
+        timeout_graceful_shutdown=10,
+        limit_concurrency=100,
+        backlog=1000
     )
+
+    # Run the server
+    server = uvicorn.Server(uvicorn_config)
+    server.run()

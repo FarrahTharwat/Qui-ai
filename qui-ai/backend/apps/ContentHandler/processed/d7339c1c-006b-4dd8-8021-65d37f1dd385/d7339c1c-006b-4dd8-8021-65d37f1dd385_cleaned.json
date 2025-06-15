@@ -1,0 +1,33 @@
+{
+    "session_id": "d7339c1c-006b-4dd8-8021-65d37f1dd385",
+    "cleaned_text": "The 2022 ICPC ECPC Qualifications Collegiate Programming Contest Day 3\n\n17 - 17 August 2022\n\n28.0\n\nHelwan University\n\nFarrah Tharwat mohamed hasan nader ibrahim\n\nMichael Mounir, Coach\n\nKhaled Hedaya Abd El-Samea, Co-coach",
+    "polished_text": "The 2022 ICPC ECPC Qualifications Collegiate Programming Contest Day 3 will be held on 16-17 - 17 August 2022. The event will be broadcast on 28-28.0.2017.Helwan University of Science and Technology (Helwan)Farrah Tharwat mohamed hasan nader ibrahim al-MounirMichael Mounir, CoachKhaled Hedaya Abd El-Samea, Co-coach\n\n",
+    "polished_pages": {
+        "page_1": "The 2022 ICPC ECPC Qualifications Collegiate Programming Contest Day 3 will be held on 16-17 - 17 August 2022. The event will be broadcast on 28-28.0.2017.Helwan University of Science and Technology (Helwan)Farrah Tharwat mohamed hasan nader ibrahim al-MounirMichael Mounir, CoachKhaled Hedaya Abd El-Samea, Co-coach"
+    },
+    "pdf_path": "processed/d7339c1c-006b-4dd8-8021-65d37f1dd385/cleaned_20250614_034139.pdf",
+    "timestamp": "2025-06-14T03:41:39.475415",
+    "metadata": {
+        "format": "PDF 1.4",
+        "title": "",
+        "author": "",
+        "subject": "",
+        "keywords": "",
+        "creator": "JasperReports Library version 6.16.0-48579d909b7943b64690c65c71e07e0b80981928",
+        "producer": "iText 2.1.7 by 1T3XT",
+        "creationDate": "D:20220819050856Z",
+        "modDate": "D:20220819050856Z",
+        "trapped": "",
+        "encryption": "Standard V4 R4 128-bit None",
+        "page_count": 1
+    },
+    "image_analysis": {
+        "page_1_img_1.png": {
+            "ocr": " )Dhar BL, co /\n",
+            "caption": "a detailed photo of a math formula or data graph, with the text ' math formula '",
+            "prompt_used": "a photo of an illustration or diagram",
+            "classification": "math",
+            "latex": ")Dhar BL, co /"
+        }
+    }
+}
